@@ -12,6 +12,8 @@ import {
   type Stats,
   type InsertStats
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Trades
@@ -214,4 +216,190 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<any> {
+    // For compatibility with existing schema
+    return undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<any> {
+    // For compatibility with existing schema
+    return undefined;
+  }
+
+  async createUser(user: any): Promise<any> {
+    // For compatibility with existing schema
+    return user;
+  }
+
+  async createTrade(insertTrade: InsertTrade): Promise<Trade> {
+    const [trade] = await db
+      .insert(trades)
+      .values(insertTrade)
+      .returning();
+    return trade;
+  }
+
+  async getTrades(limit: number = 50, offset: number = 0): Promise<Trade[]> {
+    return await db
+      .select()
+      .from(trades)
+      .orderBy(desc(trades.timestamp))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getTradesByDate(date: string): Promise<Trade[]> {
+    const startDate = new Date(date);
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 1);
+
+    return await db
+      .select()
+      .from(trades)
+      .where(eq(trades.timestamp, startDate));
+  }
+
+  async upsertConnection(insertConnection: InsertConnection): Promise<Connection> {
+    const existing = await db
+      .select()
+      .from(connections)
+      .where(eq(connections.platform, insertConnection.platform))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(connections)
+        .set({
+          ...insertConnection,
+          lastUpdate: new Date(),
+        })
+        .where(eq(connections.platform, insertConnection.platform))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(connections)
+        .values({
+          ...insertConnection,
+          lastUpdate: new Date(),
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async getConnection(platform: string): Promise<Connection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(connections)
+      .where(eq(connections.platform, platform))
+      .limit(1);
+    return connection;
+  }
+
+  async getAllConnections(): Promise<Connection[]> {
+    return await db.select().from(connections);
+  }
+
+  async getConfiguration(): Promise<Configuration | undefined> {
+    const [config] = await db
+      .select()
+      .from(configurations)
+      .limit(1);
+    
+    if (!config) {
+      // Create default configuration if none exists
+      const defaultConfig = {
+        isMirrorActive: false,
+        isAutoReconnectEnabled: true,
+        riskMultiplier: "1.0",
+        enableTakeProfit: false,
+        takeProfitPoints: 100,
+        enableStopLoss: false,
+        stopLossPoints: 50,
+        enableTrailingStop: false,
+        trailingStopPoints: 30,
+        maxSlippage: 3,
+        mt5Server: null,
+        mt5Login: null,
+        mt5Password: null,
+        avaEndpoint: null,
+        avaAccountId: null,
+        avaApiKey: null,
+      };
+      
+      const [created] = await db
+        .insert(configurations)
+        .values(defaultConfig)
+        .returning();
+      return created;
+    }
+    
+    return config;
+  }
+
+  async updateConfiguration(config: Partial<InsertConfiguration>): Promise<Configuration> {
+    const existing = await this.getConfiguration();
+    
+    if (existing) {
+      const [updated] = await db
+        .update(configurations)
+        .set({
+          ...config,
+          updatedAt: new Date(),
+        })
+        .where(eq(configurations.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(configurations)
+        .values(config)
+        .returning();
+      return created;
+    }
+  }
+
+  async getStatsByDate(date: string): Promise<Stats | undefined> {
+    const [stat] = await db
+      .select()
+      .from(stats)
+      .where(eq(stats.date, date))
+      .limit(1);
+    return stat;
+  }
+
+  async updateStats(date: string, updateStats: Partial<InsertStats>): Promise<Stats> {
+    const existing = await this.getStatsByDate(date);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(stats)
+        .set(updateStats)
+        .where(eq(stats.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(stats)
+        .values({
+          date,
+          tradesCount: 0,
+          successfulTrades: 0,
+          failedTrades: 0,
+          avgLatency: 0,
+          ...updateStats,
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async clearTrades(): Promise<void> {
+    await db.delete(trades);
+  }
+}
+
+export const storage = new DatabaseStorage();
