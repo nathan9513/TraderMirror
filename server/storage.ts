@@ -60,6 +60,17 @@ export class MemStorage implements IStorage {
       isMirrorActive: false,
       isAutoReconnectEnabled: true,
       riskMultiplier: "1.0",
+      
+      // Trading Features
+      enableTakeProfit: false,
+      takeProfitPoints: 100,
+      enableStopLoss: false,
+      stopLossPoints: 50,
+      enableTrailingStop: false,
+      trailingStopPoints: 30,
+      maxSlippage: 3,
+      
+      // Connection Settings
       mt5Server: null,
       mt5Login: null,
       mt5Password: null,

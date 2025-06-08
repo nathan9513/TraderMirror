@@ -31,6 +31,17 @@ export const configurations = pgTable("configurations", {
   isMirrorActive: boolean("is_mirror_active").default(false),
   isAutoReconnectEnabled: boolean("is_auto_reconnect_enabled").default(true),
   riskMultiplier: decimal("risk_multiplier", { precision: 3, scale: 1 }).default("1.0"),
+  
+  // Trading Features
+  enableTakeProfit: boolean("enable_take_profit").default(false),
+  takeProfitPoints: integer("take_profit_points").default(100),
+  enableStopLoss: boolean("enable_stop_loss").default(false),
+  stopLossPoints: integer("stop_loss_points").default(50),
+  enableTrailingStop: boolean("enable_trailing_stop").default(false),
+  trailingStopPoints: integer("trailing_stop_points").default(30),
+  maxSlippage: integer("max_slippage").default(3),
+  
+  // Connection Settings
   mt5Server: text("mt5_server"),
   mt5Login: text("mt5_login"),
   mt5Password: text("mt5_password"),

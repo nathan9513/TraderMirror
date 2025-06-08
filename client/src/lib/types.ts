@@ -27,6 +27,17 @@ export interface Configuration {
   isMirrorActive: boolean;
   isAutoReconnectEnabled: boolean;
   riskMultiplier: string;
+  
+  // Trading Features
+  enableTakeProfit: boolean;
+  takeProfitPoints: number;
+  enableStopLoss: boolean;
+  stopLossPoints: number;
+  enableTrailingStop: boolean;
+  trailingStopPoints: number;
+  maxSlippage: number;
+  
+  // Connection Settings
   mt5Server: string | null;
   mt5Login: string | null;
   mt5Password: string | null;

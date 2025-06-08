@@ -226,11 +226,41 @@ export class TradeMirrorService extends EventEmitter {
     // Apply risk multiplier
     const riskMultiplier = parseFloat(config.riskMultiplier || "1.0");
     
+    // Calculate TP/SL levels based on points
+    const pointValue = this.getPointValue(metaTrade.symbol);
+    let takeProfit: number | undefined;
+    let stopLoss: number | undefined;
+    let trailingStop: number | undefined;
+
+    if (config.enableTakeProfit && config.takeProfitPoints) {
+      if (metaTrade.type === 'BUY') {
+        takeProfit = metaTrade.price + (config.takeProfitPoints * pointValue);
+      } else {
+        takeProfit = metaTrade.price - (config.takeProfitPoints * pointValue);
+      }
+    }
+
+    if (config.enableStopLoss && config.stopLossPoints) {
+      if (metaTrade.type === 'BUY') {
+        stopLoss = metaTrade.price - (config.stopLossPoints * pointValue);
+      } else {
+        stopLoss = metaTrade.price + (config.stopLossPoints * pointValue);
+      }
+    }
+
+    if (config.enableTrailingStop && config.trailingStopPoints) {
+      trailingStop = config.trailingStopPoints;
+    }
+    
     const avaFeaturesTrade: AvaFeaturesTrade = {
       symbol: metaTrade.symbol,
       type: metaTrade.type,
       volume: metaTrade.volume * riskMultiplier,
       price: metaTrade.price,
+      takeProfit,
+      stopLoss,
+      trailingStop,
+      maxSlippage: config.maxSlippage || 3,
     };
 
     try {

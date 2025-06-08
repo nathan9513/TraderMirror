@@ -11,6 +11,10 @@ export interface AvaFeaturesTrade {
   type: 'BUY' | 'SELL';
   volume: number;
   price: number;
+  takeProfit?: number;
+  stopLoss?: number;
+  trailingStop?: number;
+  maxSlippage?: number;
 }
 
 export class AvaFeaturesClient extends EventEmitter {
@@ -127,8 +131,30 @@ export class AvaFeaturesClient extends EventEmitter {
     // Simulate execution delay
     await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
     
-    // Simulate occasional trade failures (5% failure rate)
-    if (Math.random() < 0.05) {
+    // Validate trading parameters
+    if (trade.maxSlippage && trade.maxSlippage < 0) {
+      throw new Error('Invalid slippage value');
+    }
+    
+    if (trade.takeProfit && trade.stopLoss && trade.type === 'BUY') {
+      if (trade.takeProfit <= trade.price || trade.stopLoss >= trade.price) {
+        throw new Error('Invalid TP/SL levels for BUY order');
+      }
+    }
+    
+    if (trade.takeProfit && trade.stopLoss && trade.type === 'SELL') {
+      if (trade.takeProfit >= trade.price || trade.stopLoss <= trade.price) {
+        throw new Error('Invalid TP/SL levels for SELL order');
+      }
+    }
+    
+    // Simulate slippage rejection
+    if (trade.maxSlippage && Math.random() < 0.02) {
+      throw new Error(`Slippage exceeded ${trade.maxSlippage} points`);
+    }
+    
+    // Simulate occasional trade failures (3% failure rate)
+    if (Math.random() < 0.03) {
       const errors = [
         'Insufficient margin',
         'Market closed',
@@ -138,6 +164,12 @@ export class AvaFeaturesClient extends EventEmitter {
       ];
       throw new Error(errors[Math.floor(Math.random() * errors.length)]);
     }
+    
+    // Log successful execution with trading features
+    console.log(`AvaFeatures: Executed ${trade.type} ${trade.volume} ${trade.symbol} at ${trade.price}${
+      trade.takeProfit ? ` TP:${trade.takeProfit}` : ''
+    }${trade.stopLoss ? ` SL:${trade.stopLoss}` : ''
+    }${trade.trailingStop ? ` TS:${trade.trailingStop}` : ''}`);
   }
 
   private startPinging(): void {
