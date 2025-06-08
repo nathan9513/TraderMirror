@@ -101,19 +101,21 @@ export function TradeLog({ trades, onRefresh, onClear, isLoading }: TradeLogProp
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead className="w-20">Time</TableHead>
+                <TableHead className="w-16">Time</TableHead>
                 <TableHead>Symbol</TableHead>
-                <TableHead className="w-20">Type</TableHead>
-                <TableHead className="w-20">Volume</TableHead>
-                <TableHead className="w-24">Price</TableHead>
-                <TableHead className="w-24">Status</TableHead>
-                <TableHead className="w-20">Latency</TableHead>
+                <TableHead className="w-16">Type</TableHead>
+                <TableHead className="w-16">Volume</TableHead>
+                <TableHead className="w-20">Price</TableHead>
+                <TableHead className="w-20">TP</TableHead>
+                <TableHead className="w-20">SL</TableHead>
+                <TableHead className="w-20">Status</TableHead>
+                <TableHead className="w-16">Latency</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {trades.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No trades recorded yet
                   </TableCell>
                 </TableRow>
@@ -137,6 +139,12 @@ export function TradeLog({ trades, onRefresh, onClear, isLoading }: TradeLogProp
                     </TableCell>
                     <TableCell className="font-mono text-sm">
                       {parseFloat(trade.price).toFixed(4)}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-green-600">
+                      {trade.takeProfit ? parseFloat(trade.takeProfit).toFixed(4) : '--'}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-red-600">
+                      {trade.stopLoss ? parseFloat(trade.stopLoss).toFixed(4) : '--'}
                     </TableCell>
                     <TableCell>
                       <Badge className={`${getStatusColor(trade.status)} flex items-center gap-1 w-fit`}>

@@ -8,6 +8,8 @@ export const trades = pgTable("trades", {
   type: text("type").notNull(), // "BUY" or "SELL"
   volume: decimal("volume", { precision: 10, scale: 2 }).notNull(),
   price: decimal("price", { precision: 10, scale: 5 }).notNull(),
+  takeProfit: decimal("take_profit", { precision: 10, scale: 5 }),
+  stopLoss: decimal("stop_loss", { precision: 10, scale: 5 }),
   status: text("status").notNull(), // "SUCCESS", "FAILED", "PENDING"
   latency: integer("latency"), // in milliseconds
   sourcePlatform: text("source_platform").default("MetaTrader"),

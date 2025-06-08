@@ -272,6 +272,8 @@ export class TradeMirrorService extends EventEmitter {
         type: metaTrade.type,
         volume: metaTrade.volume.toString(),
         price: metaTrade.price.toString(),
+        takeProfit: takeProfit?.toString() || null,
+        stopLoss: stopLoss?.toString() || null,
         status: result.success ? 'SUCCESS' : 'FAILED',
         latency: result.latency,
         sourcePlatform: 'MetaTrader',
@@ -292,6 +294,8 @@ export class TradeMirrorService extends EventEmitter {
         type: metaTrade.type,
         volume: metaTrade.volume.toString(),
         price: metaTrade.price.toString(),
+        takeProfit: takeProfit?.toString() || null,
+        stopLoss: stopLoss?.toString() || null,
         status: 'FAILED',
         latency: null,
         sourcePlatform: 'MetaTrader',
@@ -327,5 +331,39 @@ export class TradeMirrorService extends EventEmitter {
     });
 
     this.emit('statsUpdate', updatedStats);
+  }
+
+  private getPointValue(symbol: string): number {
+    // Standard point values for major currency pairs
+    const pointValues: { [key: string]: number } = {
+      'EURUSD': 0.0001,
+      'GBPUSD': 0.0001,
+      'USDJPY': 0.01,
+      'USDCHF': 0.0001,
+      'AUDUSD': 0.0001,
+      'USDCAD': 0.0001,
+      'NZDUSD': 0.0001,
+      'EURJPY': 0.01,
+      'GBPJPY': 0.01,
+      'CHFJPY': 0.01,
+      'EURGBP': 0.0001,
+      'EURAUD': 0.0001,
+      'EURCHF': 0.0001,
+      'EURCAD': 0.0001,
+      'GBPAUD': 0.0001,
+      'GBPCHF': 0.0001,
+      'GBPCAD': 0.0001,
+      'AUDCAD': 0.0001,
+      'AUDCHF': 0.0001,
+      'AUDNZD': 0.0001,
+      'CADJPY': 0.01,
+      'CADCHF': 0.0001,
+      'NZDCAD': 0.0001,
+      'NZDCHF': 0.0001,
+      'NZDJPY': 0.01,
+    };
+
+    // Return specific point value or default to 0.0001 for 4-digit pairs
+    return pointValues[symbol] || 0.0001;
   }
 }

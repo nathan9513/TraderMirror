@@ -109,6 +109,8 @@ export class MemStorage implements IStorage {
       type: insertTrade.type,
       volume: insertTrade.volume,
       price: insertTrade.price,
+      takeProfit: insertTrade.takeProfit ?? null,
+      stopLoss: insertTrade.stopLoss ?? null,
       status: insertTrade.status,
       latency: insertTrade.latency ?? null,
       sourcePlatform: insertTrade.sourcePlatform || 'MetaTrader',

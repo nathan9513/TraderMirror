@@ -4,6 +4,8 @@ export interface Trade {
   type: 'BUY' | 'SELL';
   volume: string;
   price: string;
+  takeProfit: string | null;
+  stopLoss: string | null;
   status: 'SUCCESS' | 'FAILED' | 'PENDING';
   latency: number | null;
   sourcePlatform: string;
