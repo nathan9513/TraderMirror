@@ -126,6 +126,10 @@ export default function Dashboard() {
         queryClient.setQueryData(['/api/stats/today'], message.data);
         break;
 
+      case 'tradesCleared':
+        queryClient.setQueryData(['/api/trades'], []);
+        break;
+
       default:
         break;
     }
@@ -216,7 +220,9 @@ export default function Dashboard() {
         <ConnectionStatus
           connections={connections}
           onReconnect={handleReconnect}
+          onTestConnection={handleTestConnection}
           isReconnecting={isReconnecting}
+          isTesting={isTesting}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

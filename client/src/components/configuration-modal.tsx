@@ -49,12 +49,15 @@ export function ConfigurationModal({ isOpen, onClose, configuration, onSave }: C
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="config-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5 text-primary" />
             Platform Configuration
           </DialogTitle>
+          <p id="config-description" className="text-sm text-muted-foreground">
+            Configure your MetaTrader 5 and AvaFeatures platform connections
+          </p>
         </DialogHeader>
         
         <div className="space-y-6">
