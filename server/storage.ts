@@ -90,8 +90,16 @@ export class MemStorage implements IStorage {
 
   async createTrade(insertTrade: InsertTrade): Promise<Trade> {
     const trade: Trade = {
-      ...insertTrade,
       id: this.currentTradeId++,
+      symbol: insertTrade.symbol,
+      type: insertTrade.type,
+      volume: insertTrade.volume,
+      price: insertTrade.price,
+      status: insertTrade.status,
+      latency: insertTrade.latency ?? null,
+      sourcePlatform: insertTrade.sourcePlatform || 'MetaTrader',
+      targetPlatform: insertTrade.targetPlatform || 'AvaFeatures',
+      errorMessage: insertTrade.errorMessage ?? null,
       timestamp: new Date(),
     };
     this.trades.set(trade.id, trade);
@@ -116,7 +124,11 @@ export class MemStorage implements IStorage {
     const existing = this.connections.get(insertConnection.platform);
     const connection: Connection = {
       id: existing?.id || this.currentConnectionId++,
-      ...insertConnection,
+      platform: insertConnection.platform,
+      status: insertConnection.status,
+      server: insertConnection.server ?? null,
+      account: insertConnection.account ?? null,
+      lastPing: insertConnection.lastPing ?? null,
       lastUpdate: new Date(),
     };
     this.connections.set(insertConnection.platform, connection);

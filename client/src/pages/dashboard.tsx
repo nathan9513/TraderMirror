@@ -134,8 +134,8 @@ export default function Dashboard() {
     });
   };
 
-  const systemStatus = connections.every(conn => conn.status === 'Connected') ? 'System Online' : 'System Issues';
-  const systemStatusColor = connections.every(conn => conn.status === 'Connected') ? 'text-green-600' : 'text-red-600';
+  const systemStatus = connections && connections.length > 0 && connections.every(conn => conn.status === 'Connected') ? 'System Online' : 'System Issues';
+  const systemStatusColor = connections && connections.length > 0 && connections.every(conn => conn.status === 'Connected') ? 'text-green-600' : 'text-red-600';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -175,8 +175,8 @@ export default function Dashboard() {
           {/* Control Panel */}
           <div className="lg:col-span-1">
             <ControlPanel
-              configuration={configuration}
-              stats={stats}
+              configuration={configuration || null}
+              stats={stats || null}
               onConfigurationChange={handleConfigurationChange}
             />
           </div>

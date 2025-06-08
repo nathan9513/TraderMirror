@@ -10,8 +10,8 @@ export const trades = pgTable("trades", {
   price: decimal("price", { precision: 10, scale: 5 }).notNull(),
   status: text("status").notNull(), // "SUCCESS", "FAILED", "PENDING"
   latency: integer("latency"), // in milliseconds
-  sourcePlatform: text("source_platform").notNull().default("MetaTrader"),
-  targetPlatform: text("target_platform").notNull().default("AvaFeatures"),
+  sourcePlatform: text("source_platform").default("MetaTrader"),
+  targetPlatform: text("target_platform").default("AvaFeatures"),
   errorMessage: text("error_message"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });

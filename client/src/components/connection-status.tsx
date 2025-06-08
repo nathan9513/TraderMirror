@@ -12,7 +12,7 @@ interface ConnectionStatusProps {
 
 export function ConnectionStatus({ connections, onReconnect, isReconnecting }: ConnectionStatusProps) {
   const getConnection = (platform: string) => 
-    connections.find(conn => conn.platform === platform);
+    Array.isArray(connections) ? connections.find(conn => conn.platform === platform) : undefined;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
