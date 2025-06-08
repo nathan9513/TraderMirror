@@ -151,6 +151,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear all trades
+  app.delete('/api/trades', async (req, res) => {
+    try {
+      await storage.clearTrades();
+      broadcastToClients('tradesCleared', {});
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to clear trades' });
+    }
+  });
+
   // Set up trade mirror service event handlers
   tradeMirrorService.on('trade', (trade) => {
     broadcastToClients('newTrade', trade);

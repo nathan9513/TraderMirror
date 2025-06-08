@@ -32,6 +32,9 @@ export interface IStorage {
   getStatsByDate(date: string): Promise<Stats | undefined>;
   updateStats(date: string, stats: Partial<InsertStats>): Promise<Stats>;
   
+  // Utilities
+  clearTrades(): Promise<void>;
+  
   // Users (inherited from existing schema)
   getUser(id: number): Promise<any>;
   getUserByUsername(username: string): Promise<any>;
@@ -190,6 +193,11 @@ export class MemStorage implements IStorage {
     const newUser = { ...user, id };
     this.users.set(id, newUser);
     return newUser;
+  }
+
+  async clearTrades(): Promise<void> {
+    this.trades.clear();
+    this.currentTradeId = 1;
   }
 }
 

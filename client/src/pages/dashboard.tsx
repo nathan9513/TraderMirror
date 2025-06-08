@@ -14,6 +14,7 @@ import type { Trade, Connection, Configuration, Stats, WebSocketMessage } from "
 export default function Dashboard() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isConnected: wsConnected, lastMessage } = useWebSocket();
@@ -78,6 +79,27 @@ export default function Dashboard() {
     },
   });
 
+  const testConnectionMutation = useMutation({
+    mutationFn: async (platform: string) => {
+      const response = await apiRequest('POST', '/api/connections/test', { platform });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/connections'] });
+      toast({
+        title: "Connection Test Complete",
+        description: "Connection test finished successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Test Failed",
+        description: "Connection test failed.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle WebSocket messages
   useEffect(() => {
     if (!lastMessage) return;
@@ -122,16 +144,42 @@ export default function Dashboard() {
     }
   };
 
+  const handleTestConnection = async (platform: string) => {
+    setIsTesting(true);
+    try {
+      await testConnectionMutation.mutateAsync(platform);
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
   const handleRefreshTrades = () => {
     refetchTrades();
   };
 
+  const clearTradesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('DELETE', '/api/trades');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(['/api/trades'], []);
+      toast({
+        title: "Trades Cleared",
+        description: "All trade records have been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to clear trades.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleClearTrades = () => {
-    // In a real app, you'd call an API endpoint to clear trades
-    toast({
-      title: "Clear Trades",
-      description: "Trade clearing is not implemented in this demo.",
-    });
+    clearTradesMutation.mutate();
   };
 
   const systemStatus = connections && connections.length > 0 && connections.every(conn => conn.status === 'Connected') ? 'System Online' : 'System Issues';

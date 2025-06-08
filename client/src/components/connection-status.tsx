@@ -1,16 +1,18 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Wifi, WifiOff, Clock } from "lucide-react";
+import { RefreshCw, Wifi, WifiOff, Clock, TestTube } from "lucide-react";
 import type { Connection } from "@/lib/types";
 
 interface ConnectionStatusProps {
   connections: Connection[];
   onReconnect: (platform: string) => void;
+  onTestConnection: (platform: string) => void;
   isReconnecting: boolean;
+  isTesting: boolean;
 }
 
-export function ConnectionStatus({ connections, onReconnect, isReconnecting }: ConnectionStatusProps) {
+export function ConnectionStatus({ connections, onReconnect, onTestConnection, isReconnecting, isTesting }: ConnectionStatusProps) {
   const getConnection = (platform: string) => 
     Array.isArray(connections) ? connections.find(conn => conn.platform === platform) : undefined;
 
@@ -66,16 +68,28 @@ export function ConnectionStatus({ connections, onReconnect, isReconnecting }: C
               {connection.lastPing ? `${connection.lastPing}ms` : 'N/A'}
             </span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-4"
-            onClick={() => onReconnect(platform)}
-            disabled={isReconnecting || connection.status === 'Connecting'}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isReconnecting ? 'animate-spin' : ''}`} />
-            Reconnect
-          </Button>
+          <div className="flex space-x-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => onTestConnection(platform)}
+              disabled={isTesting || connection.status === 'Connecting'}
+            >
+              <TestTube className={`w-4 h-4 mr-2 ${isTesting ? 'animate-spin' : ''}`} />
+              Test
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => onReconnect(platform)}
+              disabled={isReconnecting || connection.status === 'Connecting'}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isReconnecting ? 'animate-spin' : ''}`} />
+              Reconnect
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
