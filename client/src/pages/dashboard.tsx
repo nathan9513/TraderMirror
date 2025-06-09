@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ConnectionStatus } from "@/components/connection-status";
 import { ControlPanel } from "@/components/control-panel";
 import { TradeLog } from "@/components/trade-log";
 import { ConfigurationModal } from "@/components/configuration-modal";
+import { AccountManager } from "@/components/account-manager";
 import { useWebSocket } from "@/lib/websocket";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, RotateCcw } from "lucide-react";
+import { Settings, RotateCcw, Users, Cable, TrendingUp } from "lucide-react";
 import type { Trade, Connection, Configuration, Stats, WebSocketMessage } from "@/lib/types";
 
 export default function Dashboard() {
@@ -216,35 +218,80 @@ export default function Dashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Connection Status Cards */}
-        <ConnectionStatus
-          connections={connections}
-          onReconnect={handleReconnect}
-          onTestConnection={handleTestConnection}
-          isReconnecting={isReconnecting}
-          isTesting={isTesting}
-        />
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Panoramica
+            </TabsTrigger>
+            <TabsTrigger value="accounts" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Account
+            </TabsTrigger>
+            <TabsTrigger value="connections" className="flex items-center gap-2">
+              <Cable className="h-4 w-4" />
+              Connessioni
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Impostazioni
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Control Panel */}
-          <div className="lg:col-span-1">
+          <TabsContent value="overview" className="space-y-6">
+            {/* Connection Status Cards */}
+            <ConnectionStatus
+              connections={connections}
+              onReconnect={handleReconnect}
+              onTestConnection={handleTestConnection}
+              isReconnecting={isReconnecting}
+              isTesting={isTesting}
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Control Panel */}
+              <div className="lg:col-span-1">
+                <ControlPanel
+                  configuration={configuration || null}
+                  stats={stats || null}
+                  onConfigurationChange={handleConfigurationChange}
+                />
+              </div>
+
+              {/* Trade Log */}
+              <div className="lg:col-span-2">
+                <TradeLog
+                  trades={trades}
+                  onRefresh={handleRefreshTrades}
+                  onClear={handleClearTrades}
+                  isLoading={tradesLoading}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="accounts">
+            <AccountManager />
+          </TabsContent>
+
+          <TabsContent value="connections">
+            <ConnectionStatus
+              connections={connections}
+              onReconnect={handleReconnect}
+              onTestConnection={handleTestConnection}
+              isReconnecting={isReconnecting}
+              isTesting={isTesting}
+            />
+          </TabsContent>
+
+          <TabsContent value="settings">
             <ControlPanel
               configuration={configuration || null}
               stats={stats || null}
               onConfigurationChange={handleConfigurationChange}
             />
-          </div>
-
-          {/* Trade Log */}
-          <div className="lg:col-span-2">
-            <TradeLog
-              trades={trades}
-              onRefresh={handleRefreshTrades}
-              onClear={handleClearTrades}
-              isLoading={tradesLoading}
-            />
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Configuration Modal */}

@@ -167,6 +167,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Account Management APIs
+  
+  // Get all accounts
+  app.get('/api/accounts', async (req, res) => {
+    try {
+      const accounts = await storage.getAllAccounts();
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch accounts' });
+    }
+  });
+
+  // Create new account
+  app.post('/api/accounts', async (req, res) => {
+    try {
+      const validatedData = insertAccountSchema.parse(req.body);
+      const account = await storage.createAccount(validatedData);
+      
+      // Create default configuration for the new account
+      await storage.updateAccountConfiguration(account.id, {
+        riskMultiplier: "1.0"
+      });
+      
+      broadcastToClients('accountCreated', account);
+      res.json(account);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid account data' });
+    }
+  });
+
+  // Update account
+  app.patch('/api/accounts/:id', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const validatedData = insertAccountSchema.partial().parse(req.body);
+      const account = await storage.updateAccount(accountId, validatedData);
+      
+      broadcastToClients('accountUpdated', account);
+      res.json(account);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid account data' });
+    }
+  });
+
+  // Delete account
+  app.delete('/api/accounts/:id', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      await storage.deleteAccount(accountId);
+      
+      broadcastToClients('accountDeleted', { id: accountId });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
+  });
+
+  // Get account configuration
+  app.get('/api/accounts/:id/configuration', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const config = await storage.getAccountConfiguration(accountId);
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch account configuration' });
+    }
+  });
+
+  // Update account configuration
+  app.patch('/api/accounts/:id/configuration', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const validatedData = insertAccountConfigurationSchema.partial().parse(req.body);
+      const config = await storage.updateAccountConfiguration(accountId, validatedData);
+      
+      broadcastToClients('accountConfigurationUpdated', { accountId, config });
+      res.json(config);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid configuration data' });
+    }
+  });
+
+  // Get trades by account
+  app.get('/api/accounts/:id/trades', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 50;
+      const trades = await storage.getTradesByAccount(accountId, limit);
+      res.json(trades);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch trades' });
+    }
+  });
+
+  // Clear trades by account
+  app.delete('/api/accounts/:id/trades', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      await storage.clearTradesByAccount(accountId);
+      
+      broadcastToClients('accountTradesCleared', { accountId });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to clear account trades' });
+    }
+  });
+
+  // Get connections by account
+  app.get('/api/accounts/:id/connections', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const connections = await storage.getConnectionsByAccount(accountId);
+      res.json(connections);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch account connections' });
+    }
+  });
+
   // Set up trade mirror service event handlers
   tradeMirrorService.on('trade', (trade) => {
     broadcastToClients('newTrade', trade);
