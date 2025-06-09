@@ -8,7 +8,7 @@ import {
   insertAccountSchema,
   insertAccountConfigurationSchema
 } from "@shared/schema";
-import { TradeMirrorService } from "./services/trade-mirror";
+import { TradeReplicatorService } from "./services/trade-replicator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -16,8 +16,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize WebSocket server
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  // Initialize trade mirror service
-  const tradeMirrorService = new TradeMirrorService(storage, wss);
+  // Initialize trade replicator service
+  const tradeReplicatorService = new TradeReplicatorService(storage, wss);
   
   // WebSocket connection handling
   wss.on('connection', (ws: WebSocket) => {
@@ -105,43 +105,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test connections
-  app.post('/api/connections/test', async (req, res) => {
+  // Start/Stop replication service
+  app.post('/api/replication/start', async (req, res) => {
     try {
-      const { platform } = req.body;
-      
-      if (platform === 'MetaTrader') {
-        await tradeMirrorService.testMetaTraderConnection();
-      } else if (platform === 'AvaFeatures') {
-        await tradeMirrorService.testAvaFeaturesConnection();
-      }
-      
-      const connections = await storage.getAllConnections();
-      broadcastToClients('connections', connections);
-      
-      res.json({ success: true });
+      await tradeReplicatorService.start();
+      res.json({ success: true, message: 'Trade replication started' });
     } catch (error) {
-      res.status(500).json({ error: 'Connection test failed' });
+      res.status(500).json({ error: 'Failed to start replication service' });
     }
   });
 
-  // Reconnect to platform
-  app.post('/api/connections/reconnect', async (req, res) => {
+  app.post('/api/replication/stop', async (req, res) => {
     try {
-      const { platform } = req.body;
-      
-      if (platform === 'MetaTrader') {
-        await tradeMirrorService.reconnectMetaTrader();
-      } else if (platform === 'AvaFeatures') {
-        await tradeMirrorService.reconnectAvaFeatures();
-      }
-      
-      const connections = await storage.getAllConnections();
-      broadcastToClients('connections', connections);
-      
-      res.json({ success: true });
+      await tradeReplicatorService.stop();
+      res.json({ success: true, message: 'Trade replication stopped' });
     } catch (error) {
-      res.status(500).json({ error: 'Reconnection failed' });
+      res.status(500).json({ error: 'Failed to stop replication service' });
+    }
+  });
+
+  // Get replication status
+  app.get('/api/replication/status', async (req, res) => {
+    try {
+      const status = tradeReplicatorService.getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get replication status' });
     }
   });
 
@@ -179,23 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new account
-  app.post('/api/accounts', async (req, res) => {
-    try {
-      const validatedData = insertAccountSchema.parse(req.body);
-      const account = await storage.createAccount(validatedData);
-      
-      // Create default configuration for the new account
-      await storage.updateAccountConfiguration(account.id, {
-        riskMultiplier: "1.0"
-      });
-      
-      broadcastToClients('accountCreated', account);
-      res.json(account);
-    } catch (error) {
-      res.status(400).json({ error: 'Invalid account data' });
-    }
-  });
+  // This endpoint is handled below with replicator integration
 
   // Update account
   app.patch('/api/accounts/:id', async (req, res) => {
@@ -242,6 +215,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertAccountConfigurationSchema.partial().parse(req.body);
       const config = await storage.updateAccountConfiguration(accountId, validatedData);
       
+      // Update replicator service with new configuration
+      await tradeReplicatorService.updateAccountConfiguration(accountId);
+      
       broadcastToClients('accountConfigurationUpdated', { accountId, config });
       res.json(config);
     } catch (error) {
@@ -285,17 +261,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Set up trade mirror service event handlers
-  tradeMirrorService.on('trade', (trade) => {
-    broadcastToClients('newTrade', trade);
+  // Set up trade replicator service event handlers
+  tradeReplicatorService.on('tradeReplicated', (data: any) => {
+    broadcastToClients('tradeReplicated', data);
   });
 
-  tradeMirrorService.on('connectionUpdate', (connections) => {
-    broadcastToClients('connections', connections);
+  tradeReplicatorService.on('serviceStarted', () => {
+    broadcastToClients('replicationStarted', { status: 'active' });
   });
 
-  tradeMirrorService.on('statsUpdate', (stats) => {
-    broadcastToClients('stats', stats);
+  tradeReplicatorService.on('serviceStopped', () => {
+    broadcastToClients('replicationStopped', { status: 'inactive' });
+  });
+
+  // Hook into account management events
+  app.post('/api/accounts', async (req, res) => {
+    try {
+      const validatedData = insertAccountSchema.parse(req.body);
+      const account = await storage.createAccount(validatedData);
+      
+      // Create default configuration for the new account
+      await storage.updateAccountConfiguration(account.id, {
+        riskMultiplier: "1.0"
+      });
+      
+      // Add account to replicator service
+      await tradeReplicatorService.addAccount(account);
+      
+      broadcastToClients('accountCreated', account);
+      res.json(account);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid account data' });
+    }
+  });
+
+  // Override the previous account creation endpoint
+  app.delete('/api/accounts/:id', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      
+      // Remove from replicator service first
+      await tradeReplicatorService.removeAccount(accountId);
+      
+      await storage.deleteAccount(accountId);
+      
+      broadcastToClients('accountDeleted', { id: accountId });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
   });
 
   return httpServer;

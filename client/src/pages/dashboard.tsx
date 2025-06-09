@@ -8,6 +8,7 @@ import { ControlPanel } from "@/components/control-panel";
 import { TradeLog } from "@/components/trade-log";
 import { ConfigurationModal } from "@/components/configuration-modal";
 import { AccountManager } from "@/components/account-manager";
+import { ReplicationStatus } from "@/components/replication-status";
 import { useWebSocket } from "@/lib/websocket";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, RotateCcw, Users, Cable, TrendingUp } from "lucide-react";
