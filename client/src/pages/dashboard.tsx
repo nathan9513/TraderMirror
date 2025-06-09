@@ -220,7 +220,7 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Panoramica
@@ -228,6 +228,10 @@ export default function Dashboard() {
             <TabsTrigger value="accounts" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Account
+            </TabsTrigger>
+            <TabsTrigger value="replication" className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Replica
             </TabsTrigger>
             <TabsTrigger value="connections" className="flex items-center gap-2">
               <Cable className="h-4 w-4" />
@@ -273,6 +277,10 @@ export default function Dashboard() {
 
           <TabsContent value="accounts">
             <AccountManager />
+          </TabsContent>
+
+          <TabsContent value="replication">
+            <ReplicationStatus />
           </TabsContent>
 
           <TabsContent value="connections">
