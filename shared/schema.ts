@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const trades = pgTable("trades", {
   id: serial("id").primaryKey(),
+  accountId: integer("account_id").references(() => accounts.id),
   symbol: text("symbol").notNull(),
   type: text("type").notNull(), // "BUY" or "SELL"
   volume: decimal("volume", { precision: 10, scale: 2 }).notNull(),
@@ -18,14 +19,42 @@ export const trades = pgTable("trades", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+// Multi-account support
+export const accounts = pgTable("accounts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // User-friendly name for the account
+  platform: text("platform").notNull(), // "MetaTrader" or "AvaFeatures"
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const connections = pgTable("connections", {
   id: serial("id").primaryKey(),
+  accountId: integer("account_id").references(() => accounts.id).notNull(),
   platform: text("platform").notNull(), // "MetaTrader" or "AvaFeatures"
   status: text("status").notNull(), // "Connected", "Disconnected", "Connecting"
   server: text("server"),
   account: text("account"),
   lastPing: integer("last_ping"), // in milliseconds
   lastUpdate: timestamp("last_update").defaultNow().notNull(),
+});
+
+export const accountConfigurations = pgTable("account_configurations", {
+  id: serial("id").primaryKey(),
+  accountId: integer("account_id").references(() => accounts.id).notNull(),
+  
+  // Connection Settings per account
+  mt5Server: text("mt5_server"),
+  mt5Login: text("mt5_login"),
+  mt5Password: text("mt5_password"),
+  avaEndpoint: text("ava_endpoint"),
+  avaAccountId: text("ava_account_id"),
+  avaApiKey: text("ava_api_key"),
+  
+  // Risk settings per account
+  riskMultiplier: decimal("risk_multiplier", { precision: 3, scale: 1 }).default("1.0"),
+  
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const configurations = pgTable("configurations", {
@@ -43,13 +72,7 @@ export const configurations = pgTable("configurations", {
   trailingStopPoints: integer("trailing_stop_points").default(30),
   maxSlippage: integer("max_slippage").default(3),
   
-  // Connection Settings
-  mt5Server: text("mt5_server"),
-  mt5Login: text("mt5_login"),
-  mt5Password: text("mt5_password"),
-  avaEndpoint: text("ava_endpoint"),
-  avaAccountId: text("ava_account_id"),
-  avaApiKey: text("ava_api_key"),
+  // Global settings only
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -67,9 +90,19 @@ export const insertTradeSchema = createInsertSchema(trades).omit({
   timestamp: true,
 });
 
+export const insertAccountSchema = createInsertSchema(accounts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertConnectionSchema = createInsertSchema(connections).omit({
   id: true,
   lastUpdate: true,
+});
+
+export const insertAccountConfigurationSchema = createInsertSchema(accountConfigurations).omit({
+  id: true,
+  updatedAt: true,
 });
 
 export const insertConfigurationSchema = createInsertSchema(configurations).omit({
@@ -83,8 +116,12 @@ export const insertStatsSchema = createInsertSchema(stats).omit({
 
 export type Trade = typeof trades.$inferSelect;
 export type InsertTrade = z.infer<typeof insertTradeSchema>;
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Connection = typeof connections.$inferSelect;
 export type InsertConnection = z.infer<typeof insertConnectionSchema>;
+export type AccountConfiguration = typeof accountConfigurations.$inferSelect;
+export type InsertAccountConfiguration = z.infer<typeof insertAccountConfigurationSchema>;
 export type Configuration = typeof configurations.$inferSelect;
 export type InsertConfiguration = z.infer<typeof insertConfigurationSchema>;
 export type Stats = typeof stats.$inferSelect;
