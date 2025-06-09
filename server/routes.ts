@@ -2,7 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertTradeSchema, insertConfigurationSchema } from "@shared/schema";
+import { 
+  insertTradeSchema, 
+  insertConfigurationSchema,
+  insertAccountSchema,
+  insertAccountConfigurationSchema
+} from "@shared/schema";
 import { TradeMirrorService } from "./services/trade-mirror";
 
 export async function registerRoutes(app: Express): Promise<Server> {
