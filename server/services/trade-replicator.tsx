@@ -378,14 +378,29 @@ export class TradeReplicatorService extends EventEmitter {
     }
   }
 
-  getConnectionStatus(): { accountId: number; status: string }[] {
+  async getConnectionStatus(): Promise<{ accountId: number; status: string }[]> {
+    const accounts = await this.storage.getAllAccounts();
     const status: { accountId: number; status: string }[] = [];
     
-    for (const [accountId, clients] of this.replicaClients) {
-      const hasActiveConnection = (clients.mt5?.isConnected() || clients.ava?.isConnected()) || false;
+    for (const account of accounts) {
+      let connectionStatus = 'Disconnected';
+      
+      if (account.isMaster && this.masterMetaTraderClient.isConnected()) {
+        connectionStatus = 'Connected';
+      } else {
+        const clients = this.replicaClients.get(account.id);
+        if (clients) {
+          if (account.platform === 'MetaTrader' && clients.mt5?.isConnected()) {
+            connectionStatus = 'Connected';
+          } else if (account.platform === 'AvaFeatures' && clients.ava?.isConnected()) {
+            connectionStatus = 'Connected';
+          }
+        }
+      }
+      
       status.push({
-        accountId,
-        status: hasActiveConnection ? 'Connected' : 'Disconnected'
+        accountId: account.id,
+        status: connectionStatus
       });
     }
     

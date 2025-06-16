@@ -90,15 +90,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast configuration update
       broadcastToClients('configuration', config);
       
-      // If mirror status changed, update service
-      if ('isMirrorActive' in validatedData) {
-        if (validatedData.isMirrorActive) {
-          await tradeMirrorService.start();
-        } else {
-          await tradeMirrorService.stop();
-        }
-      }
-      
       res.json(config);
     } catch (error) {
       res.status(400).json({ error: 'Invalid configuration data' });
@@ -127,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get replication status
   app.get('/api/replication/status', async (req, res) => {
     try {
-      const status = tradeReplicatorService.getConnectionStatus();
+      const status = await tradeReplicatorService.getConnectionStatus();
       res.json(status);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get replication status' });
