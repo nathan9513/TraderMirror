@@ -431,11 +431,22 @@ export class TradeReplicatorService extends EventEmitter {
   }
 
   async updateAccountConfiguration(accountId: number): Promise<void> {
-    // Reconnect with new configuration
+    console.log(`Updating configuration for account ${accountId}...`);
+    
+    // Disconnect existing connection
     await this.removeAccount(accountId);
+    
+    // Get updated account and reconnect
     const account = await this.storage.getAccount(accountId);
     if (account && account.isActive) {
+      console.log(`Reconnecting account: ${account.name} (${account.platform})`);
       await this.setupAccountConnection(account);
+      
+      // If this is the master account, also restart master connection
+      if (account.isMaster) {
+        await this.masterMetaTraderClient.disconnect();
+        await this.startMasterConnection();
+      }
     }
   }
 

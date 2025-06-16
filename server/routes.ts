@@ -125,6 +125,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reconnect specific account
+  app.post('/api/replication/reconnect-account', async (req, res) => {
+    try {
+      const { accountId } = req.body;
+      await tradeReplicatorService.updateAccountConfiguration(accountId);
+      res.json({ success: true, message: 'Account reconnection initiated' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to reconnect account' });
+    }
+  });
+
   // Get today's stats
   app.get('/api/stats/today', async (req, res) => {
     try {

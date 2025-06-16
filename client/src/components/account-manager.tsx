@@ -331,12 +331,38 @@ function AccountConfigurationDialog({ account, isOpen, onClose }: AccountConfigu
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/accounts', account.id, 'configuration'] });
-      toast({
-        title: "Configurazione aggiornata",
-        description: "Le impostazioni dell'account sono state salvate.",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/replication/status'] });
+      
+      // Trigger automatic connection attempt
+      try {
+        const response = await fetch('/api/replication/reconnect-account', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ accountId: account.id }),
+        });
+        
+        if (response.ok) {
+          toast({
+            title: "Configurazione salvata",
+            description: "Credenziali salvate e connessione in corso...",
+          });
+        } else {
+          toast({
+            title: "Configurazione salvata",
+            description: "Credenziali salvate, ma connessione non riuscita.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Configurazione salvata",
+          description: "Credenziali salvate con successo.",
+        });
+      }
     },
     onError: () => {
       toast({
