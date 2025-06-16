@@ -89,42 +89,103 @@ export class TradeReplicatorService extends EventEmitter {
 
       if (account.platform === 'MetaTrader' && config.mt5Server && config.mt5Login && config.mt5Password) {
         const mtClient = new MetaTraderClient();
-        await mtClient.connect({
-          server: config.mt5Server,
-          login: config.mt5Login,
-          password: config.mt5Password
-        });
         
-        clients.mt5 = mtClient;
-        
-        // Update connection status
+        // Update connection status to connecting
         await this.storage.upsertConnection({
           accountId: account.id,
           platform: account.platform,
-          status: 'Connected',
+          status: 'Connecting',
           server: config.mt5Server,
           account: config.mt5Login,
           lastPing: Date.now()
         });
+
+        try {
+          await mtClient.connect({
+            server: config.mt5Server,
+            login: config.mt5Login,
+            password: config.mt5Password
+          });
+          
+          clients.mt5 = mtClient;
+          
+          // Update connection status to connected
+          await this.storage.upsertConnection({
+            accountId: account.id,
+            platform: account.platform,
+            status: 'Connected',
+            server: config.mt5Server,
+            account: config.mt5Login,
+            lastPing: Date.now()
+          });
+          
+          console.log(`✓ MetaTrader connection established for account: ${account.name}`);
+        } catch (error) {
+          await this.storage.upsertConnection({
+            accountId: account.id,
+            platform: account.platform,
+            status: 'Disconnected',
+            server: config.mt5Server,
+            account: config.mt5Login,
+            lastPing: null
+          });
+          throw error;
+        }
         
       } else if (account.platform === 'AvaFeatures' && config.avaEndpoint && config.avaAccountId && config.avaApiKey) {
         const avaClient = new AvaFeaturesClient();
-        await avaClient.connect({
-          endpoint: config.avaEndpoint,
-          accountId: config.avaAccountId,
-          apiKey: config.avaApiKey
-        });
         
-        clients.ava = avaClient;
-        
-        // Update connection status
+        // Update connection status to connecting
         await this.storage.upsertConnection({
           accountId: account.id,
           platform: account.platform,
-          status: 'Connected',
+          status: 'Connecting',
           server: config.avaEndpoint,
           account: config.avaAccountId,
           lastPing: Date.now()
+        });
+
+        try {
+          await avaClient.connect({
+            endpoint: config.avaEndpoint,
+            accountId: config.avaAccountId,
+            apiKey: config.avaApiKey
+          });
+          
+          clients.ava = avaClient;
+          
+          // Update connection status to connected
+          await this.storage.upsertConnection({
+            accountId: account.id,
+            platform: account.platform,
+            status: 'Connected',
+            server: config.avaEndpoint,
+            account: config.avaAccountId,
+            lastPing: Date.now()
+          });
+          
+          console.log(`✓ AvaFeatures connection established for account: ${account.name}`);
+        } catch (error) {
+          await this.storage.upsertConnection({
+            accountId: account.id,
+            platform: account.platform,
+            status: 'Disconnected',
+            server: config.avaEndpoint,
+            account: config.avaAccountId,
+            lastPing: null
+          });
+          throw error;
+        }
+      } else {
+        console.warn(`Account ${account.name} has incomplete configuration, skipping connection`);
+        
+        await this.storage.upsertConnection({
+          accountId: account.id,
+          platform: account.platform,
+          status: 'Disconnected',
+          server: null,
+          account: null,
+          lastPing: null
         });
       }
 
@@ -383,8 +444,11 @@ export class TradeReplicatorService extends EventEmitter {
     const status: { accountId: number; status: string }[] = [];
     
     for (const account of accounts) {
-      let connectionStatus = 'Disconnected';
+      // Check stored connection status first
+      const connection = await this.storage.getConnectionByAccount(account.id);
+      let connectionStatus = connection?.status || 'Disconnected';
       
+      // Override with real-time status if available
       if (account.isMaster && this.masterMetaTraderClient.isConnected()) {
         connectionStatus = 'Connected';
       } else {
