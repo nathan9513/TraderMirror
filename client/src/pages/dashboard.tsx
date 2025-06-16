@@ -209,10 +209,6 @@ export default function Dashboard() {
                 <div className={`w-2 h-2 rounded-full ${wsConnected && connections.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                 <span className={`text-sm ${systemStatusColor}`}>{systemStatus}</span>
               </div>
-              <Button onClick={() => setShowConfigModal(true)}>
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
             </div>
           </div>
         </div>
