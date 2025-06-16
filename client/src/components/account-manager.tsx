@@ -87,10 +87,11 @@ export function AccountManager({ className }: AccountManagerProps) {
   const handleCreateAccount = (formData: FormData) => {
     const name = formData.get('name') as string;
     const platform = formData.get('platform') as string;
+    const isMaster = formData.get('isMaster') === 'on';
     
     if (!name || !platform) return;
     
-    createAccountMutation.mutate({ name, platform });
+    createAccountMutation.mutate({ name, platform, isMaster });
   };
 
   const handleDeleteAccount = (accountId: number) => {
@@ -143,12 +144,7 @@ export function AccountManager({ className }: AccountManagerProps) {
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              const accountData = {
-                name: formData.get('name') as string,
-                platform: formData.get('platform') as string,
-                isMaster: formData.get('isMaster') === 'on',
-              };
-              createAccountMutation.mutate(accountData);
+              handleCreateAccount(formData);
             }}>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -326,12 +322,20 @@ function AccountConfigurationDialog({ account, isOpen, onClose }: AccountConfigu
   // Update configuration mutation
   const updateConfigMutation = useMutation({
     mutationFn: async (data: Partial<AccountConfiguration>) => {
-      return apiRequest(`/api/accounts/${account.id}/configuration`, {
+      const response = await fetch(`/api/accounts/${account.id}/configuration`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
       });
+      if (!response.ok) throw new Error('Failed to update configuration');
+      return response.json();
     },
     onSuccess: async () => {
+      // Close the dialog first
+      onClose();
+      
       queryClient.invalidateQueries({ queryKey: ['/api/accounts', account.id, 'configuration'] });
       queryClient.invalidateQueries({ queryKey: ['/api/replication/status'] });
       
@@ -415,7 +419,11 @@ function AccountConfigurationDialog({ account, isOpen, onClose }: AccountConfigu
             </div>
           </div>
         ) : (
-          <form action={handleConfigSubmit}>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            handleConfigSubmit(formData);
+          }}>
             <Tabs defaultValue="connection" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="connection">Connessione</TabsTrigger>
