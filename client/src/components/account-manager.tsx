@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Settings, Trash2, Cable, TrendingUp } from "lucide-react";
+import { Plus, Settings, Trash2, Cable, TrendingUp, AlertCircle, Crown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Account, AccountConfiguration } from "@shared/schema";
@@ -30,7 +31,7 @@ export function AccountManager({ className }: AccountManagerProps) {
 
   // Create account mutation
   const createAccountMutation = useMutation({
-    mutationFn: async (data: { name: string; platform: string }) => {
+    mutationFn: async (data: { name: string; platform: string; isMaster: boolean }) => {
       return apiRequest('/api/accounts', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -132,7 +133,16 @@ export function AccountManager({ className }: AccountManagerProps) {
                 Aggiungi un nuovo account di trading per il mirroring
               </DialogDescription>
             </DialogHeader>
-            <form action={handleCreateAccount}>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const accountData = {
+                name: formData.get('name') as string,
+                platform: formData.get('platform') as string,
+                isMaster: formData.get('isMaster') === 'on',
+              };
+              createAccountMutation.mutate(accountData);
+            }}>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Nome Account</Label>
