@@ -32,10 +32,15 @@ export function AccountManager({ className }: AccountManagerProps) {
   // Create account mutation
   const createAccountMutation = useMutation({
     mutationFn: async (data: { name: string; platform: string; isMaster: boolean }) => {
-      return apiRequest('/api/accounts', {
+      const response = await fetch('/api/accounts', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
       });
+      if (!response.ok) throw new Error('Failed to create account');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
@@ -57,9 +62,11 @@ export function AccountManager({ className }: AccountManagerProps) {
   // Delete account mutation
   const deleteAccountMutation = useMutation({
     mutationFn: async (accountId: number) => {
-      return apiRequest(`/api/accounts/${accountId}`, {
+      const response = await fetch(`/api/accounts/${accountId}`, {
         method: 'DELETE',
       });
+      if (!response.ok) throw new Error('Failed to delete account');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
@@ -203,16 +210,35 @@ export function AccountManager({ className }: AccountManagerProps) {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {accounts.map((account) => (
-          <Card key={account.id} className="relative">
+          <Card key={account.id} className={`relative ${account.isMaster ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950' : ''}`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{account.name}</CardTitle>
-                <Badge variant={account.platform === 'MetaTrader' ? 'default' : 'secondary'}>
-                  {account.platform}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {account.isMaster ? (
+                    <Crown className="h-4 w-4 text-yellow-600" />
+                  ) : (
+                    <Cable className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <CardTitle className="text-lg">{account.name}</CardTitle>
+                </div>
+                <div className="flex items-center gap-2">
+                  {account.isMaster && (
+                    <Badge variant="outline" className="text-yellow-700 border-yellow-300 bg-yellow-100 dark:text-yellow-400 dark:border-yellow-600 dark:bg-yellow-900">
+                      Master
+                    </Badge>
+                  )}
+                  <Badge variant={account.platform === 'MetaTrader' ? 'default' : 'secondary'}>
+                    {account.platform}
+                  </Badge>
+                </div>
               </div>
               <CardDescription>
                 Creato il {new Date(account.createdAt).toLocaleDateString('it-IT')}
+                {account.isMaster && (
+                  <span className="block text-yellow-700 dark:text-yellow-400 font-medium mt-1">
+                    Account sorgente per la replica delle operazioni
+                  </span>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>

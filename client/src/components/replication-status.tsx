@@ -125,10 +125,10 @@ export function ReplicationStatus({ className }: ReplicationStatusProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <RefreshCw className="h-5 w-5" />
-                Sistema Replica Trade
+                Sistema Replica Master-Slave
               </CardTitle>
               <CardDescription>
-                Monitora e controlla la replica automatica da MetaTrader Desktop
+                Monitora e controlla la replica automatica dall'account Master agli account Slave
               </CardDescription>
             </div>
             <div className="flex gap-2">
