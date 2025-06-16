@@ -24,6 +24,7 @@ export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(), // User-friendly name for the account
   platform: text("platform").notNull(), // "MetaTrader" or "AvaFeatures"
+  isMaster: boolean("is_master").default(false), // True for master account, false for slaves
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

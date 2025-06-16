@@ -155,6 +155,31 @@ export function AccountManager({ className }: AccountManagerProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="isMaster"
+                    name="isMaster"
+                    className="rounded border-gray-300"
+                  />
+                  <div className="grid gap-1">
+                    <Label htmlFor="isMaster" className="text-sm font-medium">
+                      Account Master
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Seleziona se questo è l'account master da cui copiare le operazioni
+                    </p>
+                  </div>
+                </div>
+                
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    <strong>Account Master:</strong> MetaTrader Desktop da cui vengono replicate le operazioni<br/>
+                    <strong>Account Slave:</strong> AvaFeatures dove vengono copiate le operazioni
+                  </AlertDescription>
+                </Alert>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={createAccountMutation.isPending}>

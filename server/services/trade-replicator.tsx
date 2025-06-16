@@ -58,11 +58,23 @@ export class TradeReplicatorService extends EventEmitter {
     try {
       const accounts = await this.storage.getAllAccounts();
       
-      for (const account of accounts) {
+      // First, find and setup master account
+      const masterAccount = accounts.find(acc => acc.isMaster && acc.isActive);
+      if (masterAccount) {
+        console.log(`Setting up master account: ${masterAccount.name}`);
+        await this.startMasterConnection();
+      } else {
+        console.warn('No active master account found');
+      }
+
+      // Then setup slave accounts (non-master accounts)
+      const slaveAccounts = accounts.filter(acc => !acc.isMaster && acc.isActive);
+      for (const account of slaveAccounts) {
+        console.log(`Setting up slave account: ${account.name}`);
         await this.setupAccountConnection(account);
       }
       
-      console.log(`Initialized ${accounts.length} account connections`);
+      console.log(`Initialized master account and ${slaveAccounts.length} slave accounts`);
     } catch (error) {
       console.error('Failed to initialize account connections:', error);
     }
