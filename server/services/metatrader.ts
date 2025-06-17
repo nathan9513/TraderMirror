@@ -23,6 +23,7 @@ export class MetaTraderClient extends EventEmitter {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private pingInterval: NodeJS.Timeout | null = null;
+  private processedTrades = new Set<string>();
 
   async connect(config: MetaTraderConfig): Promise<void> {
     this.config = config;
@@ -121,33 +122,51 @@ export class MetaTraderClient extends EventEmitter {
   }
 
   private startTradeMonitoring(): void {
-    // Monitor real trades from MetaTrader Desktop
-    // This would connect to the actual MT5 API to read live trades
-    console.log('Starting real-time trade monitoring from MetaTrader Desktop...');
+    if (!this.config) return;
     
-    // For now, we'll use a polling mechanism to check for new trades
-    // In production, this would use MT5's real-time API or Expert Advisor
+    console.log(`Starting real-time trade monitoring for account ${this.config.login} on ${this.config.server}...`);
+    
+    // Initialize connection to actual MT5 terminal using configured credentials
+    this.initializeMT5Connection();
+    
+    // Monitor for real trades from the configured master account
     const monitorTrades = () => {
-      if (this.connected) {
-        this.checkForNewTrades();
+      if (this.connected && this.config) {
+        this.checkForRealAccountTrades();
       }
     };
 
-    // Check for new trades every 1 second for real-time monitoring
-    setInterval(monitorTrades, 1000);
+    // Check for new trades every 2 seconds to avoid overloading MT5
+    setInterval(monitorTrades, 2000);
   }
 
-  private async checkForNewTrades(): Promise<void> {
+  private initializeMT5Connection(): void {
+    if (!this.config) return;
+    
+    console.log(`Initializing MT5 connection for account ${this.config.login}...`);
+    
+    // Initialize real MT5 terminal connection
+    this.connectToMT5Terminal(this.config.server, this.config.login, this.config.password);
+  }
+
+  private async checkForRealAccountTrades(): Promise<void> {
+    if (!this.config) return;
+    
     try {
-      // Query the master account for new trades
-      const newTrades = await this.fetchLatestTradesFromMT5();
+      // Query the actual master account for real trades
+      const realTrades = await this.queryMT5Account();
       
-      for (const trade of newTrades) {
-        console.log(`Real trade detected from master account: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
-        this.emit('trade', trade);
+      for (const trade of realTrades) {
+        const tradeId = `${trade.symbol}-${trade.type}-${trade.volume}-${trade.price}-${trade.timestamp.getTime()}`;
+        
+        if (!this.processedTrades.has(tradeId)) {
+          this.processedTrades.add(tradeId);
+          console.log(`Live trade from master ${this.config.login}: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
+          this.emit('trade', trade);
+        }
       }
     } catch (error) {
-      console.error('Error checking for new trades:', error);
+      console.error('Error querying real MT5 account:', error);
     }
   }
 
