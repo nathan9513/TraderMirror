@@ -25,6 +25,8 @@ function Router() {
     // Store authentication state
     localStorage.setItem('tradesync_auth', 'authenticated');
     localStorage.setItem('tradesync_session', Date.now().toString());
+    // Clear the pre-alpha warning flag so it shows again on login
+    localStorage.removeItem('preAlphaWarningShown');
     setIsAuthenticated(true);
   };
 

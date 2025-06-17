@@ -10,6 +10,7 @@ import { ConfigurationModal } from "@/components/configuration-modal";
 import { AccountManager } from "@/components/account-manager";
 import { ReplicationStatus } from "@/components/replication-status";
 import { Watermark } from "@/components/watermark";
+import { PreAlphaWarning } from "@/components/pre-alpha-warning";
 import { useWebSocket } from "@/lib/websocket";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, RotateCcw, Users, Cable, TrendingUp, LogOut } from "lucide-react";
@@ -22,11 +23,20 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showPreAlphaWarning, setShowPreAlphaWarning] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isConnected: wsConnected, lastMessage } = useWebSocket();
+
+  // Check if pre-alpha warning should be shown on component mount
+  useEffect(() => {
+    const warningShown = localStorage.getItem('preAlphaWarningShown');
+    if (!warningShown) {
+      setShowPreAlphaWarning(true);
+    }
+  }, []);
 
   // Queries
   const { data: trades = [], isLoading: tradesLoading, refetch: refetchTrades } = useQuery<Trade[]>({
@@ -323,6 +333,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         onClose={() => setShowConfigModal(false)}
         configuration={configuration || null}
         onSave={handleConfigurationChange}
+      />
+      
+      {/* Pre-Alpha Warning Popup */}
+      <PreAlphaWarning 
+        isOpen={showPreAlphaWarning}
+        onClose={() => setShowPreAlphaWarning(false)}
       />
       
       {/* Global Watermark */}
