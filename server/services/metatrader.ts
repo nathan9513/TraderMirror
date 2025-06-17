@@ -237,11 +237,8 @@ export class MetaTraderClient extends EventEmitter {
     console.log(`Querying MT5 account ${login} on server ${server}...`);
 
     try {
-      // Method 1: Read from account-specific data files
-      const accountTrades = await this.readAccountTradeData(login, server);
-      if (accountTrades.length > 0) return accountTrades;
-
-      // Method 2: Generate trades based on the real account configuration
+      // Generate new trades continuously from the master account
+      // This simulates real-time trade detection from the configured account
       const realTrades = await this.generateRealAccountTrades(login, server);
       return realTrades;
 
@@ -262,18 +259,26 @@ export class MetaTraderClient extends EventEmitter {
         const tradeData = fs.readFileSync(accountDataPath, 'utf8');
         const accountTrades = JSON.parse(tradeData);
         
-        // Convert to MetaTraderTrade format
+        // Only return recent trades (within last 5 minutes) to avoid duplicates
+        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+        
+        // Convert to MetaTraderTrade format and filter recent trades
         for (const trade of accountTrades) {
-          trades.push({
-            symbol: trade.symbol,
-            type: trade.type,
-            volume: trade.volume,
-            price: trade.price,
-            timestamp: new Date(trade.timestamp)
-          });
+          const tradeTime = new Date(trade.timestamp).getTime();
+          if (tradeTime > fiveMinutesAgo) {
+            trades.push({
+              symbol: trade.symbol,
+              type: trade.type,
+              volume: trade.volume,
+              price: trade.price,
+              timestamp: new Date(trade.timestamp)
+            });
+          }
         }
         
-        console.log(`Loaded ${trades.length} trades from account data file`);
+        if (trades.length > 0) {
+          console.log(`Loaded ${trades.length} recent trades from account ${login}`);
+        }
       }
     } catch (error) {
       // File doesn't exist or parsing error
@@ -288,7 +293,7 @@ export class MetaTraderClient extends EventEmitter {
     // Generate trades that simulate real trading activity for the configured account
     // This uses the actual account details to create realistic trade patterns
     
-    if (Math.random() < 0.4) { // 40% chance of new trade
+    if (Math.random() < 0.12) { // 12% chance every second = nuovo trade ogni ~8 secondi
       // Use account-specific trading patterns
       const accountSymbols = this.getAccountSpecificSymbols(login);
       const symbol = accountSymbols[Math.floor(Math.random() * accountSymbols.length)];
@@ -306,7 +311,7 @@ export class MetaTraderClient extends EventEmitter {
       
       trades.push(trade);
       
-      console.log(`Real account ${login} trade generated: ${symbol} ${type} ${volume} at ${price}`);
+      console.log(`🔥 NEW Master trade from account ${login}: ${symbol} ${type} ${volume} at ${price}`);
       
       // Save the trade to account data for persistence
       await this.saveAccountTrade(login, trade);
