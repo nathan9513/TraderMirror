@@ -533,4 +533,9 @@ export class TradeReplicatorService extends EventEmitter {
     
     return status;
   }
+
+  handleMasterTrade(trade: MetaTraderTrade): void {
+    console.log(`Processing real master trade: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
+    this.replicateTradeToAllAccounts(trade);
+  }
 }

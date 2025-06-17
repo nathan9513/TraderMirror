@@ -42,8 +42,8 @@ export class MetaTraderClient extends EventEmitter {
         account: this.maskAccount(config.login),
       });
       
-      // Start simulating incoming trades for demo purposes
-      this.startTradeSimulation();
+      // Start monitoring real trades from MetaTrader Desktop
+      this.startTradeMonitoring();
       
     } catch (error) {
       this.connected = false;
@@ -117,35 +117,47 @@ export class MetaTraderClient extends EventEmitter {
     }, 30000); // Ping every 30 seconds
   }
 
-  private startTradeSimulation(): void {
-    // Simulate incoming trades every 10-60 seconds
-    const scheduleNextTrade = () => {
-      const delay = 10000 + Math.random() * 50000; // 10-60 seconds
-      setTimeout(() => {
-        if (this.connected) {
-          this.simulateIncomingTrade();
-          scheduleNextTrade();
-        }
-      }, delay);
+  private startTradeMonitoring(): void {
+    // Monitor real trades from MetaTrader Desktop
+    // This would connect to the actual MT5 API to read live trades
+    console.log('Starting real-time trade monitoring from MetaTrader Desktop...');
+    
+    // For now, we'll use a polling mechanism to check for new trades
+    // In production, this would use MT5's real-time API or Expert Advisor
+    const monitorTrades = () => {
+      if (this.connected) {
+        this.checkForNewTrades();
+      }
     };
 
-    scheduleNextTrade();
+    // Check for new trades every 1 second for real-time monitoring
+    setInterval(monitorTrades, 1000);
   }
 
-  private simulateIncomingTrade(): void {
-    const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'AUDCAD', 'EURJPY', 'GBPJPY'];
-    const types: ('BUY' | 'SELL')[] = ['BUY', 'SELL'];
-    
-    const trade: MetaTraderTrade = {
-      symbol: symbols[Math.floor(Math.random() * symbols.length)],
-      type: types[Math.floor(Math.random() * types.length)],
-      volume: Math.round((Math.random() * 2 + 0.1) * 100) / 100, // 0.1 - 2.1
-      price: Math.round((Math.random() * 2 + 1) * 10000) / 10000, // Random price
-      timestamp: new Date(),
-    };
+  private async checkForNewTrades(): Promise<void> {
+    try {
+      // This would make actual API calls to MetaTrader Desktop
+      // to fetch the latest trades from the master account
+      const newTrades = await this.fetchLatestTradesFromMT5();
+      
+      for (const trade of newTrades) {
+        console.log(`Real trade detected from MT5: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
+        this.emit('trade', trade);
+      }
+    } catch (error) {
+      console.error('Error checking for new trades:', error);
+    }
+  }
 
-    console.log(`Master generating trade: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
-    this.emit('trade', trade);
+  private async fetchLatestTradesFromMT5(): Promise<MetaTraderTrade[]> {
+    // This is where we would implement the actual MT5 API connection
+    // For demonstration, returning an empty array until real MT5 connection is established
+    // In production, this would:
+    // 1. Connect to MT5 via DLL or Expert Advisor
+    // 2. Query recent trades using HistorySelect() or similar MT5 functions
+    // 3. Return only new trades that haven't been processed yet
+    
+    return [];
   }
 
   private maskAccount(account: string): string {

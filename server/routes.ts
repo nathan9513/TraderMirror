@@ -320,5 +320,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint to receive real trades from MetaTrader Desktop
+  app.post('/api/mt5/trade', async (req, res) => {
+    try {
+      const { symbol, type, volume, price, timestamp } = req.body;
+      
+      // Validate the trade data
+      if (!symbol || !type || !volume || !price) {
+        return res.status(400).json({ error: 'Missing required trade data' });
+      }
+
+      // Create trade object
+      const trade = {
+        symbol: symbol.toString(),
+        type: type.toString() as 'BUY' | 'SELL',
+        volume: parseFloat(volume.toString()),
+        price: parseFloat(price.toString()),
+        timestamp: timestamp ? new Date(timestamp) : new Date()
+      };
+
+      console.log(`Real MT5 trade received: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
+      
+      // Find the master MetaTrader client and emit the trade
+      const accounts = await storage.getAllAccounts();
+      const masterAccount = accounts.find(acc => acc.isMaster && acc.isActive);
+      
+      if (masterAccount) {
+        // Emit the trade to the replication service
+        tradeReplicatorService.handleMasterTrade(trade);
+        res.json({ success: true, message: 'Trade received and replicated' });
+      } else {
+        res.status(404).json({ error: 'Master account not found' });
+      }
+    } catch (error) {
+      console.error('Error processing MT5 trade:', error);
+      res.status(500).json({ error: 'Failed to process trade' });
+    }
+  });
+
   return httpServer;
 }
