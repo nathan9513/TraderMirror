@@ -207,12 +207,12 @@ export class TradeReplicatorService extends EventEmitter {
   }
 
   private async startMasterConnection(): Promise<void> {
-    // Connect to master MetaTrader account (this would be the desktop MT5)
-    // For simulation, we'll use the first MetaTrader account as master
+    // Connect to master MetaTrader account (the one marked as master)
     const accounts = await this.storage.getAllAccounts();
-    const masterAccount = accounts.find(acc => acc.platform === 'MetaTrader');
+    const masterAccount = accounts.find(acc => acc.isMaster && acc.isActive);
     
     if (masterAccount) {
+      console.log(`Connecting master account: ${masterAccount.name} (ID: ${masterAccount.id})`);
       const config = await this.storage.getAccountConfiguration(masterAccount.id);
       if (config?.mt5Server && config.mt5Login && config.mt5Password) {
         try {
@@ -223,10 +223,15 @@ export class TradeReplicatorService extends EventEmitter {
           });
           
           console.log('Master MetaTrader connection established');
+          this.setupMasterTradeListener();
         } catch (error) {
           console.error('Failed to connect to master MetaTrader:', error);
         }
+      } else {
+        console.error('Master account configuration missing required fields');
       }
+    } else {
+      console.error('No master account found');
     }
   }
 

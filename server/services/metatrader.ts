@@ -133,7 +133,7 @@ export class MetaTraderClient extends EventEmitter {
   }
 
   private simulateIncomingTrade(): void {
-    const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD'];
+    const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'AUDCAD', 'EURJPY', 'GBPJPY'];
     const types: ('BUY' | 'SELL')[] = ['BUY', 'SELL'];
     
     const trade: MetaTraderTrade = {
@@ -144,6 +144,7 @@ export class MetaTraderClient extends EventEmitter {
       timestamp: new Date(),
     };
 
+    console.log(`Master generating trade: ${trade.symbol} ${trade.type} ${trade.volume} at ${trade.price}`);
     this.emit('trade', trade);
   }
 
