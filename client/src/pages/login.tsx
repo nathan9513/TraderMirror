@@ -133,8 +133,8 @@ export default function Login({ onLogin }: LoginProps) {
         {/* Watermark and Build Info */}
         <div className="text-center space-y-3">
           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 space-y-2">
-            <div className="flex items-center justify-center space-x-3">
-              <span className="bg-orange-500 text-white px-3 py-1 rounded font-bold text-xs">
+            <div className="text-center">
+              <span className="bg-orange-500 text-white px-3 py-1 rounded font-bold text-xs mr-2">
                 PRE-ALPHA
               </span>
               <span className="text-orange-800 dark:text-orange-200 font-mono text-xs">
