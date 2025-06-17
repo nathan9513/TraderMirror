@@ -190,11 +190,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/accounts/:id', async (req, res) => {
     try {
       const accountId = parseInt(req.params.id);
+      
+      // Remove from replication service first
+      await tradeReplicatorService.removeAccount(accountId);
+      
+      // Then delete from database
       await storage.deleteAccount(accountId);
       
       broadcastToClients('accountDeleted', { id: accountId });
       res.json({ success: true });
     } catch (error) {
+      console.error('Failed to delete account:', error);
       res.status(500).json({ error: 'Failed to delete account' });
     }
   });

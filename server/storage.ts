@@ -286,10 +286,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAccount(id: number): Promise<void> {
-    await db
-      .update(accounts)
-      .set({ isActive: false })
-      .where(eq(accounts.id, id));
+    // Delete all related data first to avoid foreign key constraints
+    await db.delete(connections).where(eq(connections.accountId, id));
+    await db.delete(accountConfigurations).where(eq(accountConfigurations.accountId, id));
+    await db.delete(trades).where(eq(trades.accountId, id));
+    
+    // Then delete the account completely
+    await db.delete(accounts).where(eq(accounts.id, id));
   }
 
   // Trades
@@ -338,11 +341,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(connections.accountId, insertConnection.accountId))
       .limit(1);
 
+    // Convert lastPing to string if it's a number
+    const connectionData = {
+      ...insertConnection,
+      lastPing: insertConnection.lastPing ? insertConnection.lastPing.toString() : null
+    };
+
     if (existing.length > 0) {
       const [updated] = await db
         .update(connections)
         .set({
-          ...insertConnection,
+          ...connectionData,
           lastUpdate: new Date(),
         })
         .where(eq(connections.accountId, insertConnection.accountId))
@@ -352,7 +361,7 @@ export class DatabaseStorage implements IStorage {
       const [created] = await db
         .insert(connections)
         .values({
-          ...insertConnection,
+          ...connectionData,
           lastUpdate: new Date(),
         })
         .returning();
