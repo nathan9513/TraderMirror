@@ -16,26 +16,26 @@ export function PreAlphaWarning({ isOpen, onClose }: PreAlphaWarningProps) {
   const warnings = [
     {
       icon: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
-      title: "🚨 DANGER ZONE AHEAD! 🚨",
-      message: "Welcome brave soul! You're about to enter the wild west of software development. This pre-alpha version is so unstable, it makes a house of cards look like Fort Knox.",
+      title: "🚨 ZONA PERICOLO IN VISTA! 🚨",
+      message: "Benvenuto anima coraggiosa! Stai per entrare nel far west dello sviluppo software. Questa versione pre-alpha è così instabile che fa sembrare un castello di carte più solido di Fort Knox.",
       color: "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20"
     },
     {
       icon: <Bug className="w-6 h-6 text-red-500" />,
-      title: "🐛 Bug Safari Time! 🐛",
-      message: "You'll encounter more bugs than a summer camping trip! Features may disappear without warning, data might vanish into the void, and buttons might rebel against your clicks.",
+      title: "🐛 Safari dei Bug! 🐛",
+      message: "Incontrerai più bug di un campeggio estivo! Le funzioni potrebbero sparire senza preavviso, i dati potrebbero svanire nel vuoto, e i pulsanti potrebbero ribellarsi ai tuoi clic.",
       color: "border-red-500 bg-red-50 dark:bg-red-900/20"
     },
     {
       icon: <Zap className="w-6 h-6 text-purple-500" />,
-      title: "⚡ Development Only! ⚡",
-      message: "This version is intended for masochistic developers only. If you're expecting a smooth experience, you're in the wrong place. Think of it as 'extreme software testing'.",
+      title: "⚡ Solo per Sviluppo! ⚡",
+      message: "Questa versione è destinata solo a sviluppatori masochisti. Se ti aspetti un'esperienza fluida, sei nel posto sbagliato. Pensala come 'test software estremo'.",
       color: "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
     },
     {
       icon: <Skull className="w-6 h-6 text-orange-500" />,
-      title: "💀 Use at Your Own Risk! 💀",
-      message: "By proceeding, you acknowledge that any data loss, mental anguish, or sudden urges to throw your computer out the window are entirely your responsibility. We warned you!",
+      title: "💀 Usa a Tuo Rischio e Pericolo! 💀",
+      message: "Procedendo, riconosci che qualsiasi perdita di dati, angoscia mentale o improvvisi impulsi di buttare il computer dalla finestra sono interamente di tua responsabilità. Ti abbiamo avvertito!",
       color: "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
     }
   ];
@@ -78,8 +78,8 @@ export function PreAlphaWarning({ isOpen, onClose }: PreAlphaWarningProps) {
         {step === warnings.length - 1 && (
           <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
             <AlertDescription className="text-xs text-center">
-              <strong>Final Warning:</strong> This software is more experimental than a mad scientist's laboratory. 
-              Proceed only if you have a sense of humor and low expectations!
+              <strong>Avviso Finale:</strong> Questo software è più sperimentale del laboratorio di uno scienziato pazzo. 
+              Procedi solo se hai senso dell'umorismo e basse aspettative!
             </AlertDescription>
           </Alert>
         )}
@@ -87,7 +87,7 @@ export function PreAlphaWarning({ isOpen, onClose }: PreAlphaWarningProps) {
         <DialogFooter className="flex justify-between">
           <div className="flex space-x-2">
             <span className="text-xs text-gray-500">
-              {step + 1} of {warnings.length}
+              {step + 1} di {warnings.length}
             </span>
           </div>
           <div className="space-x-2">
@@ -97,14 +97,14 @@ export function PreAlphaWarning({ isOpen, onClose }: PreAlphaWarningProps) {
                 size="sm" 
                 onClick={handleSkip}
               >
-                I Get It, Skip!
+                Ho Capito, Salta!
               </Button>
             )}
             <Button 
               onClick={handleNext}
               className={step === warnings.length - 1 ? "bg-red-600 hover:bg-red-700" : ""}
             >
-              {step === warnings.length - 1 ? "Enter at My Own Risk!" : "Next Warning"}
+              {step === warnings.length - 1 ? "Entra a Tuo Rischio e Pericolo!" : "Prossimo Avviso"}
             </Button>
           </div>
         </DialogFooter>
