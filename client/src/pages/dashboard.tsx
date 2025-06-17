@@ -268,7 +268,56 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Connection Status Cards */}
+            {/* System Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* System Status */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border">
+                <div className="flex items-center">
+                  <div className={`w-3 h-3 rounded-full mr-3 ${wsConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sistema</p>
+                    <p className="text-lg font-semibold">{wsConnected ? 'Online' : 'Offline'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Connections */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border">
+                <div className="flex items-center">
+                  <Cable className="w-6 h-6 text-blue-500 mr-3" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Connessioni</p>
+                    <p className="text-lg font-semibold">{connections.filter(c => c.status === 'Connected').length}/{connections.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Trades */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border">
+                <div className="flex items-center">
+                  <TrendingUp className="w-6 h-6 text-green-500 mr-3" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Trade Oggi</p>
+                    <p className="text-lg font-semibold">{stats?.tradesCount || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Success Rate */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border">
+                <div className="flex items-center">
+                  <RotateCcw className="w-6 h-6 text-purple-500 mr-3" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Successo</p>
+                    <p className="text-lg font-semibold">
+                      {stats?.tradesCount ? Math.round((stats.successfulTrades || 0) / stats.tradesCount * 100) : 0}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Connection Status */}
             <ConnectionStatus
               connections={connections}
               onReconnect={handleReconnect}
@@ -277,26 +326,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               isTesting={isTesting}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Control Panel */}
-              <div className="lg:col-span-1">
-                <ControlPanel
-                  configuration={configuration || null}
-                  stats={stats || null}
-                  onConfigurationChange={handleConfigurationChange}
-                />
-              </div>
-
-              {/* Trade Log */}
-              <div className="lg:col-span-2">
-                <TradeLog
-                  trades={trades}
-                  onRefresh={handleRefreshTrades}
-                  onClear={handleClearTrades}
-                  isLoading={tradesLoading}
-                />
-              </div>
-            </div>
+            {/* Trade Log */}
+            <TradeLog
+              trades={trades}
+              onRefresh={handleRefreshTrades}
+              onClear={handleClearTrades}
+              isLoading={tradesLoading}
+            />
           </TabsContent>
 
           <TabsContent value="accounts">
@@ -317,12 +353,18 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             />
           </TabsContent>
 
-          <TabsContent value="settings">
-            <ControlPanel
-              configuration={configuration || null}
-              stats={stats || null}
-              onConfigurationChange={handleConfigurationChange}
-            />
+          <TabsContent value="settings" className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border">
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <Settings className="w-5 h-5 mr-2" />
+                Configurazione Sistema
+              </h2>
+              <ControlPanel
+                configuration={configuration || null}
+                stats={stats || null}
+                onConfigurationChange={handleConfigurationChange}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
