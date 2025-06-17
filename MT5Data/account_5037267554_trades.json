@@ -1,9 +1,9 @@
 [
   {
     "symbol": "USDJPY",
-    "type": "SELL",
-    "volume": 2,
-    "price": 148.25451,
-    "timestamp": "2025-06-17T20:48:55.666Z"
+    "type": "BUY",
+    "volume": 1.5,
+    "price": 148.46056,
+    "timestamp": "2025-06-17T20:53:54.263Z"
   }
 ]

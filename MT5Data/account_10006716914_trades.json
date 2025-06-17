@@ -1,9 +1,9 @@
 [
   {
     "symbol": "EURUSD",
-    "type": "SELL",
-    "volume": 0.5,
-    "price": 1.08367,
-    "timestamp": "2025-06-17T20:49:15.835Z"
+    "type": "BUY",
+    "volume": 1.5,
+    "price": 1.08372,
+    "timestamp": "2025-06-17T20:53:59.906Z"
   }
 ]
