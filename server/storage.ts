@@ -19,7 +19,7 @@ import {
   type InsertAccountConfiguration
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   // Trades
@@ -38,6 +38,7 @@ export interface IStorage {
   // Connections
   upsertConnection(connection: InsertConnection): Promise<Connection>;
   getConnection(platform: string): Promise<Connection | undefined>;
+  getConnectionForAccount(accountId: number, platform: string): Promise<Connection | undefined>;
   getConnectionByAccount(accountId: number): Promise<Connection | undefined>;
   getAllConnections(): Promise<Connection[]>;
   getConnectionsByAccount(accountId: number): Promise<Connection[]>;
@@ -160,9 +161,11 @@ export class MemStorage implements IStorage {
   }
 
   async upsertConnection(insertConnection: InsertConnection): Promise<Connection> {
-    const existing = this.connections.get(insertConnection.platform);
+    const connectionKey = `${insertConnection.platform}_${insertConnection.accountId}`;
+    const existing = this.connections.get(connectionKey);
     const connection: Connection = {
       id: existing?.id || this.currentConnectionId++,
+      accountId: insertConnection.accountId,
       platform: insertConnection.platform,
       status: insertConnection.status,
       server: insertConnection.server ?? null,
@@ -170,12 +173,42 @@ export class MemStorage implements IStorage {
       lastPing: insertConnection.lastPing ?? null,
       lastUpdate: new Date(),
     };
-    this.connections.set(insertConnection.platform, connection);
+    this.connections.set(connectionKey, connection);
     return connection;
   }
 
   async getConnection(platform: string): Promise<Connection | undefined> {
-    return this.connections.get(platform);
+    // Return first connection for this platform
+    for (const [key, connection] of this.connections.entries()) {
+      if (connection.platform === platform) {
+        return connection;
+      }
+    }
+    return undefined;
+  }
+
+  async getConnectionForAccount(accountId: number, platform: string): Promise<Connection | undefined> {
+    const connectionKey = `${platform}_${accountId}`;
+    return this.connections.get(connectionKey);
+  }
+
+  async getConnectionByAccount(accountId: number): Promise<Connection | undefined> {
+    for (const [key, connection] of this.connections.entries()) {
+      if (connection.accountId === accountId) {
+        return connection;
+      }
+    }
+    return undefined;
+  }
+
+  async getConnectionsByAccount(accountId: number): Promise<Connection[]> {
+    const results: Connection[] = [];
+    for (const [key, connection] of this.connections.entries()) {
+      if (connection.accountId === accountId) {
+        results.push(connection);
+      }
+    }
+    return results;
   }
 
   async getAllConnections(): Promise<Connection[]> {
@@ -370,10 +403,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getConnection(platform: string): Promise<Connection | undefined> {
+    // Get the first connection for this platform (for backward compatibility)
     const [connection] = await db
       .select()
       .from(connections)
       .where(eq(connections.platform, platform))
+      .limit(1);
+    return connection;
+  }
+
+  async getConnectionForAccount(accountId: number, platform: string): Promise<Connection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(connections)
+      .where(eq(connections.accountId, accountId))
       .limit(1);
     return connection;
   }
