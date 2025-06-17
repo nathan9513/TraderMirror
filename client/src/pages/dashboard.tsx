@@ -217,7 +217,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-bold text-gray-900">
                 <RotateCcw className="inline w-5 h-5 text-primary mr-2" />
-                TradeSync Pro
+                Lantea
               </h1>
               <InlineWatermark />
             </div>

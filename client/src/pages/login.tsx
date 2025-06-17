@@ -56,10 +56,10 @@ export default function Login({ onLogin }: LoginProps) {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              TradeSync Pro
+              Lantea
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Professional Trading Replication System
+              Sistema Professionale di Replicazione Trading
             </p>
           </div>
         </div>
