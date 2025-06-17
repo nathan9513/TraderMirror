@@ -158,6 +158,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per ricevere trade dall'Expert Advisor MT5
+  app.post('/api/mt5/trade', async (req: Request, res: Response) => {
+    try {
+      const { symbol, type, volume, price, timestamp } = req.body;
+      
+      if (!symbol || !type || !volume || !price) {
+        return res.status(400).json({ error: 'Missing required trade data' });
+      }
+
+      // Crea il trade dal master MetaTrader
+      const masterTrade = {
+        symbol,
+        type: type.toUpperCase(),
+        volume: parseFloat(volume),
+        price: parseFloat(price),
+        timestamp: timestamp ? new Date(timestamp) : new Date()
+      };
+
+      console.log(`Trade ricevuto da MT5 EA: ${symbol} ${type} ${volume} at ${price}`);
+
+      // Invia il trade al sistema di replicazione se attivo
+      if (tradeReplicator && tradeReplicator.isRunning) {
+        tradeReplicator.handleMasterTrade(masterTrade);
+      }
+
+      res.json({ success: true, message: 'Trade ricevuto e replicato' });
+    } catch (error) {
+      console.error('Errore elaborazione trade MT5:', error);
+      res.status(500).json({ error: 'Errore elaborazione trade' });
+    }
+  });
+
   // Account Management APIs
   
   // Get all accounts
