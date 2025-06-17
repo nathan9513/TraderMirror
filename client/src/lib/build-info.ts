@@ -15,7 +15,7 @@ const generateBuildInfo = () => {
     date: buildDate,
     time: buildTime,
     get fullVersion() {
-      return `${this.version}_${this.date}_${this.time}_B${this.buildNumber}`;
+      return `${this.version}.${this.date}.${this.time}_BlueIce_copper_25H2_lab1`;
     },
     increment() {
       this.buildNumber += 1;
