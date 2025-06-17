@@ -131,18 +131,26 @@ export default function Login({ onLogin }: LoginProps) {
         </Card>
 
         {/* Watermark and Build Info */}
-        <div className="text-center space-y-2">
-          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <div className="font-medium">
-              Software developed by <span className="text-primary font-semibold">NatGio</span>
-            </div>
-            <div className="flex items-center justify-center space-x-4">
-              <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-2 py-1 rounded text-xs font-medium">
+        <div className="text-center space-y-3">
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-center space-x-3">
+              <span className="bg-orange-500 text-white px-3 py-1 rounded font-bold text-xs">
                 PRE-ALPHA
               </span>
-              <span className="text-gray-400">
+              <span className="text-orange-800 dark:text-orange-200 font-mono text-xs">
                 Build {buildVersion}
               </span>
+            </div>
+            <div className="text-xs text-orange-700 dark:text-orange-300 leading-relaxed">
+              <div className="font-medium mb-1">
+                This version is intended for development purposes only.
+              </div>
+              <div>
+                Not suitable for production use. Use at your own risk.
+              </div>
+            </div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+              Software developed by <span className="text-primary font-semibold">NatGio</span>
             </div>
           </div>
         </div>
