@@ -247,9 +247,13 @@ export class TradeReplicatorService extends EventEmitter {
     }
 
     const replicationPromises = accounts.map(async (account) => {
-      // Skip the master account
-      if (account.platform === 'MetaTrader') return;
+      // Skip the master account and inactive accounts
+      if (account.isMaster || !account.isActive) {
+        console.log(`Skipping account ${account.name}: ${account.isMaster ? 'is master' : 'not active'}`);
+        return;
+      }
       
+      console.log(`Replicating trade to slave account: ${account.name} (${account.platform})`);
       try {
         await this.replicateTradeToAccount(account, masterTrade);
       } catch (error) {
