@@ -285,8 +285,8 @@ export class MetaTraderClient extends EventEmitter {
   }
 
   private async connectToMT5ViaTCP(login: string, server: string, password: string): Promise<MetaTraderTrade[]> {
+    const net = await import('net');
     return new Promise((resolve) => {
-      const net = require('net');
       const client = new net.Socket();
       
       // Try to connect to MT5 terminal via TCP

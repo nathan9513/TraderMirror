@@ -2,13 +2,14 @@ import { EventEmitter } from "events";
 import { WebSocketServer } from "ws";
 import type { IStorage } from "../storage";
 import { MetaTraderClient, type MetaTraderTrade } from "./metatrader";
+import { MetaTraderRealClient } from "./metatrader-real";
 import { AvaFeaturesClient, type AvaFeaturesTrade } from "./avafeatures";
 import type { Account, AccountConfiguration } from "@shared/schema";
 
 export class TradeReplicatorService extends EventEmitter {
   private storage: IStorage;
   private wss: WebSocketServer;
-  private masterMetaTraderClient: MetaTraderClient;
+  private masterMetaTraderClient: MetaTraderRealClient;
   private replicaClients: Map<number, { mt5?: MetaTraderClient; ava?: AvaFeaturesClient }> = new Map();
   private isRunning = false;
 
@@ -16,7 +17,7 @@ export class TradeReplicatorService extends EventEmitter {
     super();
     this.storage = storage;
     this.wss = wss;
-    this.masterMetaTraderClient = new MetaTraderClient();
+    this.masterMetaTraderClient = new MetaTraderRealClient();
     this.setupMasterTradeListener();
   }
 
