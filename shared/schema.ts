@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, decimal, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, decimal, integer, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -36,7 +36,7 @@ export const connections = pgTable("connections", {
   status: text("status").notNull(), // "Connected", "Disconnected", "Connecting"
   server: text("server"),
   account: text("account"),
-  lastPing: integer("last_ping"), // in milliseconds
+  lastPing: text("last_ping"), // timestamp as string
   lastUpdate: timestamp("last_update").defaultNow().notNull(),
 });
 
