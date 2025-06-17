@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RotateCcw, Eye, EyeOff, Lock } from "lucide-react";
+import { BUILD_INFO } from "@/lib/build-info";
 
 interface LoginProps {
   onLogin: (password: string) => void;
@@ -16,8 +17,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const buildDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const buildVersion = `1.0_${buildDate}`;
+  const buildVersion = BUILD_INFO.fullVersion;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +31,8 @@ export default function Login({ onLogin }: LoginProps) {
     setError("");
 
     try {
-      // Simple password validation - in production this would be more secure
-      if (password === "admin123" || password === "tradesync2025") {
+      // Password validation
+      if (password === "Dennisd-401") {
         onLogin(password);
       } else {
         setError("Invalid password. Please try again.");
