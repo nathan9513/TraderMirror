@@ -11,10 +11,14 @@ import { AccountManager } from "@/components/account-manager";
 import { ReplicationStatus } from "@/components/replication-status";
 import { useWebSocket } from "@/lib/websocket";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, RotateCcw, Users, Cable, TrendingUp } from "lucide-react";
+import { Settings, RotateCcw, Users, Cable, TrendingUp, LogOut } from "lucide-react";
 import type { Trade, Connection, Configuration, Stats, WebSocketMessage } from "@/lib/types";
 
-export default function Dashboard() {
+interface DashboardProps {
+  onLogout?: () => void;
+}
+
+export default function Dashboard({ onLogout }: DashboardProps) {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -209,6 +213,17 @@ export default function Dashboard() {
                 <div className={`w-2 h-2 rounded-full ${wsConnected && connections.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
                 <span className={`text-sm ${systemStatusColor}`}>{systemStatus}</span>
               </div>
+              {onLogout && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={onLogout}
+                  className="text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              )}
             </div>
           </div>
         </div>
