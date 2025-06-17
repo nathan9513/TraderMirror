@@ -43,7 +43,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     queryKey: ['/api/trades'],
   });
 
-  const { data: connections = [] } = useQuery<Connection[]>({
+  const { data: connections = [], error: connectionsError } = useQuery<Connection[]>({
     queryKey: ['/api/connections'],
   });
 
@@ -287,7 +287,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   <Cable className="w-6 h-6 text-blue-500 mr-3" />
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Connessioni</p>
-                    <p className="text-lg font-semibold">{connections.filter(c => c.status === 'Connected').length}/{connections.length}</p>
+                    <p className="text-lg font-semibold">{Array.isArray(connections) ? connections.filter(c => c.status === 'Connected').length : 0}/{Array.isArray(connections) ? connections.length : 0}</p>
                   </div>
                 </div>
               </div>
@@ -319,7 +319,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
             {/* Connection Status */}
             <ConnectionStatus
-              connections={connections}
+              connections={Array.isArray(connections) ? connections : []}
               onReconnect={handleReconnect}
               onTestConnection={handleTestConnection}
               isReconnecting={isReconnecting}
@@ -345,7 +345,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
           <TabsContent value="connections">
             <ConnectionStatus
-              connections={connections}
+              connections={Array.isArray(connections) ? connections : []}
               onReconnect={handleReconnect}
               onTestConnection={handleTestConnection}
               isReconnecting={isReconnecting}
