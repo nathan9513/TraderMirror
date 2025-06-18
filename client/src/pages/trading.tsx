@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { TradingViewEmbed } from "@/components/ui/tradingview-embed";
+import { Navigation } from "@/components/navigation";
 import { TrendingUp, Play, Square, Send, Activity, Clock, Zap } from "lucide-react";
 import type { Trade } from "@/lib/types";
 
@@ -132,7 +133,9 @@ export default function TradingPage() {
   const recentTrades = trades.slice(0, 10);
 
   return (
-    <div className="space-y-6">
+    <>
+      <Navigation />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Trading Platform</h1>
@@ -327,7 +330,7 @@ export default function TradingPage() {
                         </span>
                       </div>
                     )}
-                    <Badge variant={trade.status === 'executed' ? 'outline' : 'destructive'}>
+                    <Badge variant={trade.status === 'SUCCESS' ? 'outline' : 'destructive'}>
                       {trade.status}
                     </Badge>
                   </div>
@@ -337,6 +340,7 @@ export default function TradingPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
