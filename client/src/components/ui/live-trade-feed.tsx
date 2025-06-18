@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { TrendingUp, TrendingDown, Clock, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, Zap, Activity } from 'lucide-react';
 
 interface TradeEvent {
   id: string;

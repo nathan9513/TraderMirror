@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
+import TradingPage from "@/pages/trading";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -53,7 +54,9 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={() => <Dashboard onLogout={handleLogout} />} />
+      <Route path="/" component={() => <TradingPage />} />
+      <Route path="/trading" component={() => <TradingPage />} />
+      <Route path="/dashboard" component={() => <Dashboard onLogout={handleLogout} />} />
       <Route component={NotFound} />
     </Switch>
   );
