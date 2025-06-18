@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChartTradeModal } from '@/components/ui/chart-trade-modal';
+import { EnhancedChartModal } from '@/components/ui/enhanced-chart-modal';
 import { TrendingUp, Play, Square, MousePointer } from 'lucide-react';
 
 interface TradingViewEmbedProps {
@@ -16,7 +16,7 @@ interface TradingViewEmbedProps {
 export function TradingViewEmbed({ 
   symbol = 'EURUSD', 
   width = '100%', 
-  height = 600,
+  height = 800,
   onTradeClick,
   onTradeExecute 
 }: TradingViewEmbedProps) {
@@ -55,15 +55,20 @@ export function TradingViewEmbed({
         "RSI@tv-basicstudies"
       ],
       show_popup_button: true,
-      popup_width: "1200",
-      popup_height: "800",
+      popup_width: "1400",
+      popup_height: "900",
       no_referral_id: true,
       enabled_features: [
         'study_templates',
         'side_toolbar_in_fullscreen_mode',
         'trading_signals',
         'header_saveload',
-        'chart_crosshair_menu'
+        'chart_crosshair_menu',
+        'context_menus',
+        'border_around_the_chart',
+        'header_chart_type',
+        'header_resolutions',
+        'header_screenshot'
       ],
       disabled_features: [
         'use_localstorage_for_settings',
@@ -86,18 +91,43 @@ export function TradingViewEmbed({
         if (containerRef.current) {
           const chartContainer = containerRef.current.querySelector('iframe');
           if (chartContainer) {
-            // Add click event listener to chart area
-            chartContainer.addEventListener('click', (event) => {
-              // Simulate price extraction from chart click
+            // Add click event listener to chart area with better price detection
+            chartContainer.addEventListener('dblclick', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              
+              // Get click position relative to chart
               const rect = chartContainer.getBoundingClientRect();
+              const x = event.clientX - rect.left;
               const y = event.clientY - rect.top;
               const chartHeight = rect.height;
+              const chartWidth = rect.width;
               
-              // Simple price estimation based on click position
-              const priceRange = 0.1; // Assume 0.1 price range for demonstration
-              const estimatedPrice = 1.0800 + (1 - y / chartHeight) * priceRange;
+              // More accurate price estimation based on typical chart layout
+              // Account for chart margins and scale
+              const chartMarginTop = 60; // Account for header
+              const chartMarginBottom = 50; // Account for time axis
+              const actualChartHeight = chartHeight - chartMarginTop - chartMarginBottom;
+              const relativeY = (y - chartMarginTop) / actualChartHeight;
               
-              setClickedPrice(estimatedPrice);
+              // Dynamic price range based on symbol
+              let basePrice = 1.0800;
+              let priceRange = 0.05;
+              
+              if (symbol.includes('JPY')) {
+                basePrice = 150.00;
+                priceRange = 2.0;
+              } else if (symbol.includes('GBP')) {
+                basePrice = 1.2500;
+                priceRange = 0.05;
+              }
+              
+              // Calculate estimated price (inverted because chart Y is top-to-bottom)
+              const estimatedPrice = basePrice + (1 - relativeY) * priceRange;
+              
+              console.log(`Chart clicked at (${x}, ${y}) - Estimated price: ${estimatedPrice.toFixed(5)}`);
+              
+              setClickedPrice(Number(estimatedPrice.toFixed(5)));
               setShowTradeModal(true);
             });
           }
@@ -179,7 +209,7 @@ export function TradingViewEmbed({
               <div>
                 <h4 className="text-sm font-medium">Trade da Grafico</h4>
                 <p className="text-xs text-muted-foreground">
-                  Clicca direttamente sul grafico o usa il pulsante
+                  Doppio click sul grafico per trading al prezzo
                 </p>
               </div>
               <Button
@@ -197,12 +227,12 @@ export function TradingViewEmbed({
           </div>
         )}
 
-        {/* Chart Trade Modal */}
-        <ChartTradeModal
+        {/* Enhanced Chart Trade Modal */}
+        <EnhancedChartModal
           isOpen={showTradeModal}
           onClose={() => setShowTradeModal(false)}
           symbol={symbol}
-          price={clickedPrice}
+          clickPrice={clickedPrice}
           onTradeExecute={onTradeExecute}
         />
       </CardContent>

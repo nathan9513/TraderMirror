@@ -144,25 +144,26 @@ export default function TradingPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* TradingView Chart */}
-        <div className="xl:col-span-3">
-          <TradingViewEmbed 
-            symbol={tradeData.symbol}
-            height={700}
-            onTradeClick={(type) => {
-              setTradeData(prev => ({ ...prev, type }));
-              executeQuickTrade(type);
-            }}
-            onTradeExecute={(trade) => {
-              toast({
-                title: "Trade da Grafico Eseguito",
-                description: `${trade.symbol} ${trade.type} ${trade.volume}`,
-              });
-              queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
-            }}
-          />
-        </div>
+      {/* Full Width TradingView Chart */}
+      <div className="mb-6">
+        <TradingViewEmbed 
+          symbol={tradeData.symbol}
+          height={800}
+          onTradeClick={(type) => {
+            setTradeData(prev => ({ ...prev, type }));
+            executeQuickTrade(type);
+          }}
+          onTradeExecute={(trade) => {
+            toast({
+              title: "Trade da Grafico Eseguito",
+              description: `${trade.symbol} ${trade.type} ${trade.volume}`,
+            });
+            queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
+          }}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Trading Panel */}
         <Card>
