@@ -28,7 +28,7 @@ export interface IStorage {
   getTradesByDate(date: string): Promise<Trade[]>;
   getTradesByAccount(accountId: number, limit?: number): Promise<Trade[]>;
   
-  // Accounts
+  // Accounts (slave accounts only)
   createAccount(account: InsertAccount): Promise<Account>;
   getAccount(id: number): Promise<Account | undefined>;
   getAllAccounts(): Promise<Account[]>;
@@ -81,32 +81,44 @@ export class MemStorage implements IStorage {
     // Initialize default configuration
     this.configuration = {
       id: 1,
-      isMirrorActive: false,
+      isMirrorActive: true,
       isAutoReconnectEnabled: true,
-      riskMultiplier: "1.0",
-      
-      // Trading Features
-      enableTakeProfit: false,
-      takeProfitPoints: 100,
-      enableStopLoss: false,
-      stopLossPoints: 50,
+      reconnectAttempts: 3,
+      enableTakeProfit: true,
+      enableStopLoss: true,
       enableTrailingStop: false,
+      takeProfitPoints: 50,
+      stopLossPoints: 50,
       trailingStopPoints: 30,
       maxSlippage: 3,
-      
-      // Connection Settings
-      mt5Server: null,
-      mt5Login: null,
-      mt5Password: null,
-      avaEndpoint: null,
-      avaAccountId: null,
-      avaApiKey: null,
       updatedAt: new Date(),
     };
+
+    // Initialize default slave accounts
+    this.createAccount({
+      name: "Account Slave 1",
+      platform: "MetaTrader",
+      server: "demo.server.com",
+      login: "123456",
+      password: "password",
+      isActive: true,
+      riskMultiplier: "1.00"
+    });
+
+    this.createAccount({
+      name: "Account Slave 2", 
+      platform: "AvaFeatures",
+      server: "ava.server.com",
+      login: "654321",
+      password: "password",
+      isActive: true,
+      riskMultiplier: "0.50"
+    });
 
     // Initialize default connections
     this.connections.set("MetaTrader", {
       id: 1,
+      accountId: 1,
       platform: "MetaTrader",
       status: "Disconnected",
       server: null,
@@ -117,6 +129,7 @@ export class MemStorage implements IStorage {
 
     this.connections.set("AvaFeatures", {
       id: 2,
+      accountId: 2,
       platform: "AvaFeatures",
       status: "Disconnected",
       server: null,

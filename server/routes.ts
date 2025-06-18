@@ -196,7 +196,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per ricevere trade dall'Expert Advisor MT5
+  // Execute Trade on Platform (TradingView)
+  app.post('/api/platform/trade', async (req: Request, res: Response) => {
+    try {
+      const { symbol, type, volume, price, takeProfit, stopLoss, replicateToAccounts } = req.body;
+      
+      if (!symbol || !type || !volume) {
+        return res.status(400).json({ 
+          error: 'Parametri mancanti: symbol, type, volume sono richiesti' 
+        });
+      }
+
+      const { platformTradeExecutor } = await import('./services/platform-trade-executor');
+      (platformTradeExecutor as any).storage = storage;
+
+      const result = await platformTradeExecutor.executePlatformTrade({
+        symbol,
+        type,
+        volume: parseFloat(volume),
+        price: price ? parseFloat(price) : undefined,
+        takeProfit: takeProfit ? parseFloat(takeProfit) : undefined,
+        stopLoss: stopLoss ? parseFloat(stopLoss) : undefined,
+        replicateToAccounts: replicateToAccounts || []
+      });
+
+      if (result.success) {
+        broadcastToClients('platform_trade_executed', {
+          originTradeId: result.originTradeId,
+          replicationResults: result.replicationResults,
+          timestamp: new Date().toISOString()
+        });
+        
+        res.json({
+          success: true,
+          ...result,
+          message: 'Operazione eseguita su piattaforma e replicata'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Error executing platform trade:', error);
+      res.status(500).json({ error: 'Errore elaborazione trade' });
+    }
+  });
+
+  // Execute Trade on Slave Account
+  app.post('/api/accounts/:id/trade', async (req: Request, res: Response) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const { symbol, type, volume, price, takeProfit, stopLoss } = req.body;
+      
+      if (!symbol || !type || !volume) {
+        return res.status(400).json({ 
+          error: 'Parametri mancanti: symbol, type, volume sono richiesti' 
+        });
+      }
+
+      const { platformTradeExecutor } = await import('./services/platform-trade-executor');
+      (platformTradeExecutor as any).storage = storage;
+
+      const result = await platformTradeExecutor.executeSlaveAccountTrade(accountId, {
+        symbol,
+        type,
+        volume: parseFloat(volume),
+        price: price ? parseFloat(price) : undefined,
+        takeProfit: takeProfit ? parseFloat(takeProfit) : undefined,
+        stopLoss: stopLoss ? parseFloat(stopLoss) : undefined
+      });
+
+      broadcastToClients('slave_trade_executed', {
+        accountId,
+        tradeId: result.tradeId,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({
+        success: true,
+        ...result,
+        message: 'Operazione eseguita su account slave'
+      });
+
+    } catch (error) {
+      console.error('Error executing slave account trade:', error);
+      res.status(500).json({ error: 'Errore elaborazione trade su account slave' });
+    }
+  });
+
+  // Connect to TradingView
+  app.post('/api/tradingview/connect', async (req, res) => {
+    try {
+      const { username, password, broker } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password required' });
+      }
+
+      const { tradingViewClient } = await import('./services/tradingview-client');
+      
+      await tradingViewClient.connect({
+        username,
+        password,
+        broker: broker || 'default'
+      });
+      
+      broadcastToClients('tradingview_connected', {
+        username,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({ success: true, message: 'Connected to TradingView' });
+    } catch (error) {
+      console.error('Error connecting to TradingView:', error);
+      res.status(500).json({ error: 'Failed to connect to TradingView' });
+    }
+  });
+
+  // Disconnect from TradingView
+  app.post('/api/tradingview/disconnect', async (req, res) => {
+    try {
+      const { tradingViewClient } = await import('./services/tradingview-client');
+      
+      await tradingViewClient.disconnect();
+      
+      broadcastToClients('tradingview_disconnected', {
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({ success: true, message: 'Disconnected from TradingView' });
+    } catch (error) {
+      console.error('Error disconnecting from TradingView:', error);
+      res.status(500).json({ error: 'Failed to disconnect from TradingView' });
+    }
+  });
+
+  // Get TradingView connection status
+  app.get('/api/tradingview/status', async (req, res) => {
+    try {
+      const { tradingViewClient } = await import('./services/tradingview-client');
+      
+      const isConnected = tradingViewClient.isConnected();
+      
+      res.json({ 
+        connected: isConnected,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error checking TradingView status:', error);
+      res.status(500).json({ error: 'Failed to check TradingView status' });
+    }
+  });
+
+  // Legacy MT5 endpoint (kept for compatibility)
   app.post('/api/mt5/trade', async (req: Request, res: Response) => {
     try {
       const { symbol, type, volume, price, timestamp } = req.body;

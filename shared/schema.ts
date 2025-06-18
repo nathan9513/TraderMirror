@@ -19,14 +19,21 @@ export const trades = pgTable("trades", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
-// Multi-account support
+// Multi-account support (slave accounts only)
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(), // User-friendly name for the account
-  platform: text("platform").notNull(), // "MetaTrader" or "AvaFeatures"
-  isMaster: boolean("is_master").default(false), // True for master account, false for slaves
+  name: text("name").notNull(),
+  platform: text("platform", { enum: ["MetaTrader", "AvaFeatures", "TradingView"] }).notNull(),
+  server: text("server"),
+  login: text("login"),
+  password: text("password"),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  riskMultiplier: decimal("risk_multiplier", { precision: 3, scale: 2 }).default("1.00"),
+  isReplicationLocked: boolean("is_replication_locked").default(false),
+  lastManualTrade: timestamp("last_manual_trade"),
+  allowManualTrading: boolean("allow_manual_trading").default(true),
+  conflictResolution: text("conflict_resolution", { enum: ["pause_replication", "block_manual", "allow_both"] }).default("pause_replication"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const connections = pgTable("connections", {
