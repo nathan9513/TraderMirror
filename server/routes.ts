@@ -240,6 +240,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update account conflict resolution settings
+  app.put('/api/accounts/:id/conflict-settings', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const { conflictResolution, allowManualTrading } = req.body;
+      
+      const account = await storage.updateAccount(accountId, {
+        conflictResolution,
+        allowManualTrading
+      });
+      
+      res.json(account);
+    } catch (error) {
+      console.error('Error updating account conflict settings:', error);
+      res.status(500).json({ error: 'Failed to update account settings' });
+    }
+  });
+
+  // Resume replication for account
+  app.post('/api/accounts/:id/resume-replication', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      
+      // Implementation would use the trade replicator service
+      // tradeReplicatorService.resumeReplication(accountId);
+      
+      await storage.updateAccount(accountId, { 
+        isReplicationLocked: false 
+      });
+      
+      broadcastToClients('replication_resumed', {
+        accountId,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({ success: true, message: 'Replication resumed' });
+    } catch (error) {
+      console.error('Error resuming replication:', error);
+      res.status(500).json({ error: 'Failed to resume replication' });
+    }
+  });
+
+  // Report manual trade on slave account
+  app.post('/api/accounts/:id/manual-trade', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const trade = req.body;
+      
+      // Import conflict manager
+      const { conflictManager } = await import('./services/conflict-manager');
+      
+      // Report to conflict manager
+      conflictManager.reportManualTrade(accountId, trade);
+      
+      await storage.updateAccount(accountId, { 
+        lastManualTrade: new Date() 
+      });
+      
+      broadcastToClients('manual_trade_detected', {
+        accountId,
+        trade,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({ success: true, message: 'Manual trade reported' });
+    } catch (error) {
+      console.error('Error reporting manual trade:', error);
+      res.status(500).json({ error: 'Failed to report manual trade' });
+    }
+  });
+
+  // Get conflict status for account
+  app.get('/api/accounts/:id/conflict-status', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const { conflictManager } = await import('./services/conflict-manager');
+      
+      const status = conflictManager.getConflictStats(accountId);
+      res.json(status);
+    } catch (error) {
+      console.error('Error getting conflict status:', error);
+      res.status(500).json({ error: 'Failed to get conflict status' });
+    }
+  });
+
+  // Unlock account manually
+  app.post('/api/accounts/:id/unlock', async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const { conflictManager } = await import('./services/conflict-manager');
+      
+      conflictManager.unlockAccount(accountId);
+      
+      broadcastToClients('account_unlocked', {
+        accountId,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({ success: true, message: 'Account unlocked' });
+    } catch (error) {
+      console.error('Error unlocking account:', error);
+      res.status(500).json({ error: 'Failed to unlock account' });
+    }
+  });
+
   // This endpoint is handled below with replicator integration
 
   // Update account
