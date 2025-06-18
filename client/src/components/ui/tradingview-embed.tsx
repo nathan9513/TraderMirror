@@ -2,23 +2,28 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Play, Square } from 'lucide-react';
+import { ChartTradeModal } from '@/components/ui/chart-trade-modal';
+import { TrendingUp, Play, Square, MousePointer } from 'lucide-react';
 
 interface TradingViewEmbedProps {
   symbol?: string;
   width?: string | number;
   height?: string | number;
   onTradeClick?: (type: 'BUY' | 'SELL') => void;
+  onTradeExecute?: (trade: any) => void;
 }
 
 export function TradingViewEmbed({ 
   symbol = 'EURUSD', 
   width = '100%', 
-  height = 400,
-  onTradeClick 
+  height = 600,
+  onTradeClick,
+  onTradeExecute 
 }: TradingViewEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showTradeModal, setShowTradeModal] = useState(false);
+  const [clickedPrice, setClickedPrice] = useState<number | undefined>();
 
   useEffect(() => {
     // Create TradingView widget script
@@ -101,35 +106,70 @@ export function TradingViewEmbed({
           </div>
         </div>
 
-        {/* Quick Trade Controls */}
-        {isLoaded && onTradeClick && (
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <h4 className="text-sm font-medium">Esecuzione Rapida</h4>
-              <p className="text-xs text-muted-foreground">
-                Trade diretti su {symbol}
-              </p>
-            </div>
-            <div className="flex gap-2">
+        {/* Trading Controls */}
+        {isLoaded && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Quick Trade Controls */}
+            {onTradeClick && (
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <h4 className="text-sm font-medium">Esecuzione Rapida</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Trade istantanei su {symbol}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => onTradeClick('BUY')}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    BUY
+                  </Button>
+                  <Button
+                    onClick={() => onTradeClick('SELL')}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    <Square className="h-3 w-3 mr-1" />
+                    SELL
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Chart Click Trade */}
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div>
+                <h4 className="text-sm font-medium">Trade da Grafico</h4>
+                <p className="text-xs text-muted-foreground">
+                  Clicca sul grafico per aprire trade
+                </p>
+              </div>
               <Button
-                onClick={() => onTradeClick('BUY')}
+                onClick={() => {
+                  setClickedPrice(undefined);
+                  setShowTradeModal(true);
+                }}
                 size="sm"
-                className="bg-green-600 hover:bg-green-700"
+                variant="outline"
               >
-                <Play className="h-3 w-3 mr-1" />
-                BUY
-              </Button>
-              <Button
-                onClick={() => onTradeClick('SELL')}
-                size="sm"
-                variant="destructive"
-              >
-                <Square className="h-3 w-3 mr-1" />
-                SELL
+                <MousePointer className="h-3 w-3 mr-1" />
+                Apri Trade
               </Button>
             </div>
           </div>
         )}
+
+        {/* Chart Trade Modal */}
+        <ChartTradeModal
+          isOpen={showTradeModal}
+          onClose={() => setShowTradeModal(false)}
+          symbol={symbol}
+          price={clickedPrice}
+          onTradeExecute={onTradeExecute}
+        />
       </CardContent>
     </Card>
   );

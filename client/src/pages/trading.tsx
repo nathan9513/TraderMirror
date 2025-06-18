@@ -149,10 +149,17 @@ export default function TradingPage() {
         <div className="lg:col-span-2">
           <TradingViewEmbed 
             symbol={tradeData.symbol}
-            height={400}
+            height={600}
             onTradeClick={(type) => {
               setTradeData(prev => ({ ...prev, type }));
               executeQuickTrade(type);
+            }}
+            onTradeExecute={(trade) => {
+              toast({
+                title: "Trade da Grafico Eseguito",
+                description: `${trade.symbol} ${trade.type} ${trade.volume}`,
+              });
+              queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
             }}
           />
         </div>

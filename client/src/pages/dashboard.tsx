@@ -14,6 +14,7 @@ import { PreAlphaWarning } from "@/components/pre-alpha-warning";
 import { useWebSocket } from "@/lib/websocket";
 import { apiRequest } from "@/lib/queryClient";
 import { Settings, RotateCcw, Users, Cable, TrendingUp, LogOut } from "lucide-react";
+import { Link } from "wouter";
 import { InlineWatermark } from "@/components/watermark";
 import { Navigation } from "@/components/navigation";
 import type { Trade, Connection, Configuration, Stats, WebSocketMessage } from "@/lib/types";
