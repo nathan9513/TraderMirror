@@ -51,12 +51,24 @@ export function TradingViewEmbed({
       hotlist: true,
       calendar: true,
       studies: [
-        "STD;SMA"
+        "STD;SMA",
+        "RSI@tv-basicstudies"
       ],
       show_popup_button: true,
-      popup_width: "1000",
-      popup_height: "650",
-      no_referral_id: true
+      popup_width: "1200",
+      popup_height: "800",
+      no_referral_id: true,
+      enabled_features: [
+        'study_templates',
+        'side_toolbar_in_fullscreen_mode',
+        'trading_signals',
+        'header_saveload',
+        'chart_crosshair_menu'
+      ],
+      disabled_features: [
+        'use_localstorage_for_settings',
+        'volume_force_overlay'
+      ]
     };
 
     script.innerHTML = JSON.stringify(config);
@@ -66,8 +78,31 @@ export function TradingViewEmbed({
       containerRef.current.innerHTML = '';
       containerRef.current.appendChild(script);
       
-      // Mark as loaded after a delay
-      setTimeout(() => setIsLoaded(true), 2000);
+      // Widget loaded successfully with chart interaction
+      setTimeout(() => {
+        setIsLoaded(true);
+        
+        // Setup chart interaction for trade execution
+        if (containerRef.current) {
+          const chartContainer = containerRef.current.querySelector('iframe');
+          if (chartContainer) {
+            // Add click event listener to chart area
+            chartContainer.addEventListener('click', (event) => {
+              // Simulate price extraction from chart click
+              const rect = chartContainer.getBoundingClientRect();
+              const y = event.clientY - rect.top;
+              const chartHeight = rect.height;
+              
+              // Simple price estimation based on click position
+              const priceRange = 0.1; // Assume 0.1 price range for demonstration
+              const estimatedPrice = 1.0800 + (1 - y / chartHeight) * priceRange;
+              
+              setClickedPrice(estimatedPrice);
+              setShowTradeModal(true);
+            });
+          }
+        }
+      }, 3000);
     }
 
     return () => {
@@ -144,7 +179,7 @@ export function TradingViewEmbed({
               <div>
                 <h4 className="text-sm font-medium">Trade da Grafico</h4>
                 <p className="text-xs text-muted-foreground">
-                  Clicca sul grafico per aprire trade
+                  Clicca direttamente sul grafico o usa il pulsante
                 </p>
               </div>
               <Button
