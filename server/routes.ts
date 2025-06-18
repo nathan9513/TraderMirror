@@ -61,6 +61,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create trade (for testing/simulation)
+  app.post('/api/trades', async (req, res) => {
+    try {
+      const { accountId, symbol, type, volume, price, takeProfit, stopLoss } = req.body;
+      
+      if (!accountId || !symbol || !type || !volume || !price) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const trade = await storage.createTrade({
+        accountId: parseInt(accountId),
+        symbol,
+        type: type.toUpperCase(),
+        volume: volume.toString(),
+        price: price.toString(),
+        takeProfit: takeProfit ? takeProfit.toString() : null,
+        stopLoss: stopLoss ? stopLoss.toString() : null,
+        status: 'executed',
+        latency: Math.floor(Math.random() * 100) + 50,
+        sourcePlatform: 'MetaTrader',
+        targetPlatform: 'MetaTrader',
+        errorMessage: null,
+        timestamp: new Date()
+      });
+
+      // Broadcast via WebSocket
+      broadcastToClients('trade_executed', {
+        trade,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json(trade);
+    } catch (error) {
+      console.error('Error creating trade:', error);
+      res.status(500).json({ error: 'Failed to create trade' });
+    }
+  });
+
   // Get connections
   app.get('/api/connections', async (req, res) => {
     try {
