@@ -34,7 +34,9 @@ export function TradingViewEmbed({
     
     // Widget configuration
     const config = {
-      autosize: true,
+      autosize: false,
+      width: "100%",
+      height: 1200,
       symbol: `FX_IDC:${symbol}`,
       interval: "15",
       timezone: "Europe/Rome",
@@ -159,7 +161,7 @@ export function TradingViewEmbed({
         {/* TradingView Widget Container */}
         <div 
           ref={containerRef}
-          style={{ width, height }}
+          style={{ width: '100%', height: '1200px' }}
           className="tradingview-widget-container bg-white rounded-lg border"
         >
           {/* Fallback content while loading */}

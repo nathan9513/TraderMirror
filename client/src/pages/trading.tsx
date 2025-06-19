@@ -148,7 +148,7 @@ export default function TradingPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* TradingView Chart - Wider and Taller */}
-        <div className="xl:col-span-4">
+        <div className="xl:col-span-4 h-[1200px]">
           <TradingViewEmbed 
             symbol={tradeData.symbol}
             height={1200}
