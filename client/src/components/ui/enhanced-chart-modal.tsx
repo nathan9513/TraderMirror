@@ -125,7 +125,7 @@ export function EnhancedChartModal({
 
     setLoading(true);
     try {
-      const response = await fetch('/api/platform/trade', {
+      const response = await fetch('/api/slave/trade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +136,8 @@ export function EnhancedChartModal({
           takeProfit: tradeData.takeProfit ? parseFloat(tradeData.takeProfit) : undefined,
           stopLoss: tradeData.stopLoss ? parseFloat(tradeData.stopLoss) : undefined,
           maxSlippage: parseFloat(tradeData.maxSlippage),
-          replicateToAccounts: [1, 2],
+          targetAccounts: ['all'],
+          skipTradingView: true,
           isChartTrade: true,
           clickPrice: clickPrice
         })
@@ -146,8 +147,8 @@ export function EnhancedChartModal({
 
       if (result.success) {
         toast({
-          title: "Trade Eseguito dal Grafico",
-          description: `${symbol} ${tradeData.type} ${tradeData.volume} @ ${tradeData.price}`,
+          title: "Trade Replicato su Account Slave",
+          description: `${symbol} ${tradeData.type} ${tradeData.volume} su ${result.executedAccounts?.length || 0} account`,
         });
 
         if (onTradeExecute) {

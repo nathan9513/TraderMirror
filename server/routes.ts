@@ -197,6 +197,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Execute Trade on Platform (TradingView)
+  // Slave Account Direct Trading - No TradingView required
+  app.post('/api/slave/trade', async (req: Request, res: Response) => {
+    try {
+      const { symbol, type, volume, price, takeProfit, stopLoss, targetAccounts, skipTradingView } = req.body;
+
+      if (!symbol || !type || !volume) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Symbol, type, and volume are required' 
+        });
+      }
+
+      const startTime = Date.now();
+      const executedAccounts: any[] = [];
+      const failedAccounts: any[] = [];
+
+      // Get all active slave accounts
+      const accounts = await storage.getAllAccounts();
+      const activeSlaveAccounts = accounts.filter(acc => acc.isActive);
+
+      // Execute on each slave account
+      for (const account of activeSlaveAccounts) {
+        try {
+          const connection = await storage.getConnectionByAccount(account.id);
+          if (!connection || connection.status !== 'connected') {
+            failedAccounts.push({
+              accountId: account.id,
+              platform: account.platform,
+              error: 'Account not connected'
+            });
+            continue;
+          }
+
+          let executionResult;
+
+          if (account.platform === 'AvaFeatures') {
+            executionResult = await executeAvaFeaturesTrade({
+              symbol,
+              type,
+              volume,
+              price,
+              takeProfit,
+              stopLoss
+            });
+          } else if (account.platform === 'MetaTrader') {
+            executionResult = await executeMetaTraderTrade({
+              symbol,
+              type,
+              volume,
+              price,
+              takeProfit,
+              stopLoss
+            });
+          } else {
+            throw new Error(`Unsupported platform: ${account.platform}`);
+          }
+
+          if (executionResult.success) {
+            executedAccounts.push({
+              accountId: account.id,
+              platform: account.platform,
+              latency: executionResult.latency
+            });
+
+            // Save trade record
+            await storage.createTrade({
+              accountId: account.id,
+              symbol,
+              type,
+              volume: volume.toString(),
+              price: price.toString(),
+              takeProfit: takeProfit?.toString() || null,
+              stopLoss: stopLoss?.toString() || null,
+              status: 'executed',
+              latency: executionResult.latency,
+              sourcePlatform: 'Manual',
+              targetPlatform: account.platform
+            });
+          } else {
+            failedAccounts.push({
+              accountId: account.id,
+              platform: account.platform,
+              error: executionResult.error
+            });
+          }
+        } catch (error) {
+          failedAccounts.push({
+            accountId: account.id,
+            platform: account.platform,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      const totalLatency = Date.now() - startTime;
+
+      // Broadcast to connected clients
+      broadcastToClients('slaveTradeExecuted', {
+        symbol,
+        type,
+        volume,
+        executedAccounts,
+        failedAccounts,
+        totalLatency
+      });
+
+      res.json({
+        success: executedAccounts.length > 0,
+        executedAccounts,
+        failedAccounts,
+        totalLatency,
+        message: `Trade executed on ${executedAccounts.length}/${activeSlaveAccounts.length} accounts`
+      });
+
+    } catch (error) {
+      console.error('Slave trade execution error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error during slave trade execution'
+      });
+    }
+  });
+
   app.post('/api/platform/trade', async (req: Request, res: Response) => {
     try {
       const { symbol, type, volume, price, takeProfit, stopLoss, replicateToAccounts } = req.body;

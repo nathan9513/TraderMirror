@@ -16,7 +16,7 @@ interface TradingViewEmbedProps {
 export function TradingViewEmbed({ 
   symbol = 'EURUSD', 
   width = '100%', 
-  height = 800,
+  height = 850,
   onTradeClick,
   onTradeExecute 
 }: TradingViewEmbedProps) {
