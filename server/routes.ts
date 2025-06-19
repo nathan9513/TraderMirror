@@ -9,6 +9,7 @@ import {
   insertAccountConfigurationSchema
 } from "@shared/schema";
 import { TradeReplicatorService } from "./services/trade-replicator";
+import { executeAvaFeaturesTrade, executeMetaTraderTrade, executeTradingViewTrade } from "./services/trade-executor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
