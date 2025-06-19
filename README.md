@@ -1,7 +1,7 @@
 # Lantea - Sistema di Replicazione Trade Avanzato
 
 **Versione**: _BlueIce_copper_25H2_lab1 (Pre-Alpha)  
-**Autenticazione**: Password protetta (Dennisd-401)
+**Autenticazione**: Password protetta 
 
 ## Panoramica
 
