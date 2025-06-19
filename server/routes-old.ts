@@ -31,6 +31,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
+  function sendToClient(ws: WebSocket, type: string, data: any) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type, data, timestamp: new Date().toISOString() }));
+    }
+  }
+
   // Get all trades
   app.get("/api/trades", async (req: Request, res: Response) => {
     try {
@@ -41,6 +47,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching trades:', error);
       res.status(500).json({ error: 'Failed to fetch trades' });
+    }
+  });
+
+  // Get trades by date
+  app.get("/api/trades/date/:date", async (req: Request, res: Response) => {
+    try {
+      const { date } = req.params;
+      const trades = await storage.getTradesByDate(date);
+      res.json(trades);
+    } catch (error) {
+      console.error('Error fetching trades by date:', error);
+      res.status(500).json({ error: 'Failed to fetch trades by date' });
     }
   });
 
@@ -71,9 +89,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Slave trade execution endpoint - direct replication without TradingView
   app.post('/api/slave/trade', async (req: Request, res: Response) => {
     try {
-      const { symbol, type, volume, price, takeProfit, stopLoss } = req.body;
+      const { symbol, type, volume, price, takeProfit, stopLoss, targetAccounts, skipTradingView } = req.body;
       
-      console.log('Slave trade request:', { symbol, type, volume });
+      console.log('Slave trade request:', { symbol, type, volume, targetAccounts });
       
       // Get all active accounts for replication
       const accounts = await storage.getAllAccounts();
@@ -110,9 +128,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             symbol,
             type,
             volume: Number(volume),
-            price: price || 1.08500,
+            price: price || 1.08500, // Default price for demo
             success: true,
-            latency: Math.floor(Math.random() * 100) + 50
+            latency: Math.floor(Math.random() * 100) + 50 // Simulated latency
           };
           
           // Save trade to database
@@ -173,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Platform trade execution endpoint (legacy - redirects to slave trade)
   app.post('/api/platform/trade', async (req: Request, res: Response) => {
     try {
-      const { symbol, type, volume, price, takeProfit, stopLoss } = req.body;
+      const { symbol, type, volume, price, takeProfit, stopLoss, replicateToAccounts } = req.body;
       
       const result = {
         success: true,
@@ -226,6 +244,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching connections:', error);
       res.status(500).json({ error: 'Failed to fetch connections' });
+    }
+  });
+
+  // Get configuration
+  app.get("/api/configuration", async (req: Request, res: Response) => {
+    try {
+      const config = await storage.getConfiguration();
+      res.json(config || {});
+    } catch (error) {
+      console.error('Error fetching configuration:', error);
+      res.status(500).json({ error: 'Failed to fetch configuration' });
+    }
+  });
+
+  // Update configuration
+  app.post("/api/configuration", async (req: Request, res: Response) => {
+    try {
+      const config = await storage.updateConfiguration(req.body);
+      broadcastToClients('configuration_updated', config);
+      res.json(config);
+    } catch (error) {
+      console.error('Error updating configuration:', error);
+      res.status(500).json({ error: 'Failed to update configuration' });
     }
   });
 
