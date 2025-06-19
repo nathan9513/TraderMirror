@@ -147,11 +147,11 @@ export default function TradingPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* TradingView Chart - Wider */}
+        {/* TradingView Chart - Wider and Taller */}
         <div className="xl:col-span-4">
           <TradingViewEmbed 
             symbol={tradeData.symbol}
-            height={850}
+            height={1200}
             onTradeClick={(type) => {
               setTradeData(prev => ({ ...prev, type }));
               executeQuickTrade(type);
