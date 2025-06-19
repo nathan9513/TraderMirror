@@ -100,14 +100,15 @@ export default function TradingPage() {
   const executeQuickTrade = async (type: 'BUY' | 'SELL') => {
     setLoading(true);
     try {
-      const response = await fetch('/api/platform/trade', {
+      const response = await fetch('/api/slave/trade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           symbol: tradeData.symbol,
           type: type,
           volume: 0.1,
-          replicateToAccounts: [1, 2]
+          targetAccounts: ['all'],
+          skipTradingView: true
         })
       });
 
@@ -115,8 +116,8 @@ export default function TradingPage() {
       
       if (result.success) {
         toast({
-          title: "Quick Trade Eseguito",
-          description: `${tradeData.symbol} ${type} 0.1 - ${result.replicationResults?.length || 0} repliche`,
+          title: "Quick Trade Replicato",
+          description: `${tradeData.symbol} ${type} 0.1 su ${result.executedAccounts?.length || 0} account slave`,
         });
         queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
       }
