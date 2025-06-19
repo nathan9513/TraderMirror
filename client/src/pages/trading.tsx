@@ -309,40 +309,42 @@ export default function TradingPage() {
               <p>Nessun trade recente</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentTrades.map((trade) => (
-                <div key={trade.id} className="flex items-center justify-between p-3 rounded-lg border bg-gray-50/50">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      {trade.type === 'BUY' ? (
-                        <TrendingUp className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Square className="h-4 w-4 text-red-600" />
-                      )}
-                      <span className="font-medium">{trade.symbol}</span>
-                    </div>
-                    <Badge variant={trade.type === 'BUY' ? 'default' : 'destructive'}>
+                <div key={trade.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={trade.type === 'BUY' ? 'default' : 'destructive'}
+                      className="min-w-[50px] justify-center text-xs font-medium"
+                    >
                       {trade.type}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Vol: {trade.volume}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-sm">{trade.symbol}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Vol: {parseFloat(trade.volume).toFixed(2)} • {parseFloat(trade.price).toFixed(5)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      {trade.price}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                      {trade.latency && (
+                        <span className="text-xs text-muted-foreground">{trade.latency}ms</span>
+                      )}
+                      <Badge 
+                        variant={trade.status === 'SUCCESS' ? 'outline' : 'destructive'}
+                        className="text-xs"
+                      >
+                        {trade.status === 'SUCCESS' ? 'Eseguito' : 'Fallito'}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(trade.timestamp).toLocaleTimeString('it-IT', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
                     </span>
-                    {trade.latency && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          {trade.latency}ms
-                        </span>
-                      </div>
-                    )}
-                    <Badge variant={trade.status === 'SUCCESS' ? 'outline' : 'destructive'}>
-                      {trade.status}
-                    </Badge>
                   </div>
                 </div>
               ))}
