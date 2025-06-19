@@ -275,24 +275,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Slave trade execution result:', result);
       res.json(result);
+      
+    } catch (error) {
+      console.error('Slave trade execution error:', error);
+      res.status(500).json({ success: false, error: 'Internal server error during slave trade execution' });
+    }
+  });
 
-          let executionResult;
-
-          if (account.platform === 'AvaFeatures') {
-            executionResult = await executeAvaFeaturesTrade({
-              symbol,
-              type,
-              volume,
-              price,
-              takeProfit,
-              stopLoss
-            });
-          } else if (account.platform === 'MetaTrader') {
-            executionResult = await executeMetaTraderTrade({
-              symbol,
-              type,
-              volume,
-              price,
+  // Platform trade execution endpoint (legacy - still used by some components)
+  app.post('/api/platform/trade', async (req: Request, res: Response) => {
               takeProfit,
               stopLoss
             });
