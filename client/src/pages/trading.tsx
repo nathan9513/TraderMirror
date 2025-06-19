@@ -146,7 +146,7 @@ export default function TradingPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 mb-8">
         {/* TradingView Chart - Wider and Taller */}
         <div className="xl:col-span-4 h-[1200px]">
           <TradingViewEmbed 
@@ -291,8 +291,9 @@ export default function TradingPage() {
         </Card>
       </div>
 
-      {/* Recent Trades */}
-      <Card>
+      {/* Recent Trades - Separated section */}
+      <div className="mt-8">
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
@@ -351,9 +352,10 @@ export default function TradingPage() {
             </div>
           )}
         </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
+      
+    </div>
     </>
   );
 }
