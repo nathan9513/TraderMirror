@@ -47,7 +47,7 @@ export default function TradingPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/platform/trade', {
+      const response = await fetch('/api/slave/trade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,7 +57,8 @@ export default function TradingPage() {
           price: tradeData.price ? parseFloat(tradeData.price) : undefined,
           takeProfit: tradeData.takeProfit ? parseFloat(tradeData.takeProfit) : undefined,
           stopLoss: tradeData.stopLoss ? parseFloat(tradeData.stopLoss) : undefined,
-          replicateToAccounts: [1, 2]
+          targetAccounts: ['all'],
+          skipTradingView: true
         })
       });
 
@@ -65,8 +66,8 @@ export default function TradingPage() {
 
       if (result.success) {
         toast({
-          title: "Trade Eseguito",
-          description: `${tradeData.symbol} ${tradeData.type} ${tradeData.volume} - Replicato su ${result.replicationResults?.length || 0} account`,
+          title: "Trade Replicato",
+          description: `${tradeData.symbol} ${tradeData.type} ${tradeData.volume} su ${result.executedAccounts?.length || 0} account slave`,
         });
 
         queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
@@ -80,8 +81,8 @@ export default function TradingPage() {
         }));
       } else {
         toast({
-          title: "Errore Trade",
-          description: result.error,
+          title: "Errore Replicazione",
+          description: result.error || "Replicazione fallita sui conti slave",
           variant: "destructive"
         });
       }
@@ -140,7 +141,7 @@ export default function TradingPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Trading Platform</h1>
         <p className="text-muted-foreground">
-          Esecuzione trade diretta su TradingView con replicazione automatica
+          Replicazione trade diretta sui conti slave AvaFeatures e MetaTrader
         </p>
       </div>
 
@@ -283,7 +284,7 @@ export default function TradingPage() {
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              Esegue su TradingView e replica automaticamente
+              Replica direttamente sui conti slave AvaFeatures/MetaTrader
             </p>
           </CardContent>
         </Card>
